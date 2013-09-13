@@ -57,7 +57,7 @@ Double_t doublePeakModel (Double_t * xx, Double_t * par)
 
   double norm = 1. / (shift * shift + gamma) - 1 / ((shift + 2 * distance) * (shift + 2 * distance) + gamma) ;
   return scale * (1. / norm) * ( 1. / ((x - distance) * (x - distance) + gamma) - 1 / ((x + distance) * (x + distance) + gamma)) ;
-  return scale * ( 1. / ((x - distance) * (x - distance) + gamma) - 1 / ((x + distance) * (x + distance) + gamma)) ;
+//  return scale * ( 1. / ((x - distance) * (x - distance) + gamma) - 1 / ((x + distance) * (x + distance) + gamma)) ;
 }
 
 
@@ -104,15 +104,16 @@ int graphs ()
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
   
   
+  
   // ----> MASS 350 ---- ---- ---- 
 
   // interference parametrisation:
-  tg_par0->SetPoint (i, 350, -7.27708e-07) ;
+  tg_par0->SetPoint (i, 350, -7.27716e-07) ;
   tg_par1->SetPoint (i, 350, 350.92) ;
-  tg_par2->SetPoint (i, 350, 3.35566e-05) ;
-  tg_par3->SetPoint (i, 350, 1057.74) ;
+  tg_par2->SetPoint (i, 350, 0.0008) ;
+  tg_par3->SetPoint (i, 350, 1057.76) ;
   TF1 * func_350 = new TF1 ("func_350",doublePeakModel, 200, 2000, 4) ;
-  double params_350[4] = {-7.27708e-07, 350.92, 3.35566e-05, 1057.74 } ;
+  double params_350[4] = {-7.27716e-07, 350.92, 0.0008, 1057.76 } ;
   func_350->SetParameters (params_350) ;
   // MG signal only parametrisation:
   tg_sig_par0->SetPoint (i, 350, 0.00796514) ;
@@ -143,10 +144,10 @@ int graphs ()
   // interference parametrisation:
   tg_par0->SetPoint (i, 500, -4.85722e-06) ;
   tg_par1->SetPoint (i, 500, 494.671) ;
-  tg_par2->SetPoint (i, 500, 0.00052224) ;
+  tg_par2->SetPoint (i, 500, 0.0008) ;
   tg_par3->SetPoint (i, 500, 11800.6) ;
   TF1 * func_500 = new TF1 ("func_500",doublePeakModel, 200, 2000, 4) ;
-  double params_500[4] = {-4.85722e-06, 494.671, 0.00052224, 11800.6 } ;
+  double params_500[4] = {-4.85722e-06, 494.671, 0.0008, 11800.6 } ;
   func_500->SetParameters (params_500) ;
   // MG signal only parametrisation:
   tg_sig_par0->SetPoint (i, 500, 0.00141565) ;
@@ -175,12 +176,12 @@ int graphs ()
   // ----> MASS 650 ---- ---- ---- 
 
   // interference parametrisation:
-  tg_par0->SetPoint (i, 650, -2.15076e-06) ;
-  tg_par1->SetPoint (i, 650, 648.513) ;
-  tg_par2->SetPoint (i, 650, 0.00186807) ;
-  tg_par3->SetPoint (i, 650, 23441.7) ;
+  tg_par0->SetPoint (i, 650, -2.15074e-06) ;
+  tg_par1->SetPoint (i, 650, 648.512) ;
+  tg_par2->SetPoint (i, 650, 0.0008) ;
+  tg_par3->SetPoint (i, 650, 23441.5) ;
   TF1 * func_650 = new TF1 ("func_650",doublePeakModel, 200, 2000, 4) ;
-  double params_650[4] = {-2.15076e-06, 648.513, 0.00186807, 23441.7 } ;
+  double params_650[4] = {-2.15074e-06, 648.512, 0.0008, 23441.5 } ;
   func_650->SetParameters (params_650) ;
   // MG signal only parametrisation:
   tg_sig_par0->SetPoint (i, 650, 0.000300014) ;
@@ -209,12 +210,12 @@ int graphs ()
   // ----> MASS 800 ---- ---- ---- 
 
   // interference parametrisation:
-  tg_par0->SetPoint (i, 800, -1.51448e-06) ;
-  tg_par1->SetPoint (i, 800, 759.212) ;
-  tg_par2->SetPoint (i, 800, -93.181) ;
-  tg_par3->SetPoint (i, 800, 27556.6) ;
+  tg_par0->SetPoint (i, 800, -1.18176e-06) ;
+  tg_par1->SetPoint (i, 800, 762.783) ;
+  tg_par2->SetPoint (i, 800, 0.0008) ;
+  tg_par3->SetPoint (i, 800, 36214.6) ;
   TF1 * func_800 = new TF1 ("func_800",doublePeakModel, 200, 2000, 4) ;
-  double params_800[4] = {-1.51448e-06, 759.212, -93.181, 27556.6 } ;
+  double params_800[4] = {-1.18176e-06, 762.783, 0.0008, 36214.6 } ;
   func_800->SetParameters (params_800) ;
   // MG signal only parametrisation:
   tg_sig_par0->SetPoint (i, 800, 8.56526e-05) ;
@@ -243,12 +244,12 @@ int graphs ()
   // ----> MASS 1000 ---- ---- ---- 
 
   // interference parametrisation:
-  tg_par0->SetPoint (i, 1000, -1.98073e-06) ;
-  tg_par1->SetPoint (i, 1000, 797.038) ;
-  tg_par2->SetPoint (i, 1000, 211.976) ;
-  tg_par3->SetPoint (i, 1000, 50378.3) ;
+  tg_par0->SetPoint (i, 1000, -4.20059e-06) ;
+  tg_par1->SetPoint (i, 1000, 812.788) ;
+  tg_par2->SetPoint (i, 1000, 0.0008) ;
+  tg_par3->SetPoint (i, 1000, 85283.8) ;
   TF1 * func_1000 = new TF1 ("func_1000",doublePeakModel, 200, 2000, 4) ;
-  double params_1000[4] = {-1.98073e-06, 797.038, 211.976, 50378.3 } ;
+  double params_1000[4] = {-4.20059e-06, 812.788, 0.0008, 85283.8 } ;
   func_1000->SetParameters (params_1000) ;
   // MG signal only parametrisation:
   tg_sig_par0->SetPoint (i, 1000, 6.62748e-05) ;
@@ -273,7 +274,6 @@ int graphs ()
   double params_sAi_1000[7] = {4.96586e-05, 740.689, -227.948, 3.94522, 3, 1, 3 } ;
   func_sAi_1000->SetParameters (params_sAi_1000) ;
   i++ ;
-
 
 
   //PG plotting
@@ -341,28 +341,63 @@ int graphs ()
   tg_sAi_par6->GetYaxis ()->SetTitle ("left power law") ;
 
   TCanvas * c_par = new TCanvas () ;
-  TF1 * sigmoid = new TF1 ("sigmoid", "[2] + [0] / (1.0 + TMath::Exp(-[1] * (x - [3])))") ;
-  sigmoid->SetParameter (0, 25000) ;
-  sigmoid->SetParameter (1, 0.005) ;
-  sigmoid->SetParameter (2, 30000) ;
-  sigmoid->SetParameter (3, 700) ;
 
   c_par->Divide (2,2) ;
   i = 0 ;
   double x, y ;
+  
   cout << "---> INTERF PARAM 0\n" ;
   tg_par0->GetPoint (1, x, y) ;
   cout << y << endl ;
-  c_par->cd (++i) ; tg_par0->Draw ("AL*") ; 
+  c_par->cd (++i) ; 
+  tg_par0->Draw ("AL*") ; 
+//  TF1 * fit_param0 = new TF1 ("fit_param0", "[0] + [1] * TMath::Power (1 - TMath::Exp (- [2] * (x * x - [3] * [3])), 2)") ;
+//  fit_param0->FixParameter (0, -0.000005) ; // vertical offset
+//  fit_param0->FixParameter (1, 0.0000033) ; // difference betw. min and plateau
+//  fit_param0->FixParameter (2, 0.00001) ;
+//  fit_param0->FixParameter (3, 460) ; // position of the minimum
+//  fit_param0->SetLineWidth (1) ;
+//  fit_param0->SetLineColor (kBlue + 1) ;
+//  tg_par0->Fit (fit_param0, "", "", 0, 700) ;
+  TF1 * fit_param0 = new TF1 ("fit_param0", "[0] + [1] * x + [2] * x * x + [3] * x * x * x + [4] * x * x * x * x") ;
+  fit_param0->SetParameter (0,   0.00013466) ;
+  fit_param0->SetParameter (1, -8.60154e-07) ;
+  fit_param0->SetParameter (2,  1.89307e-09) ;
+  fit_param0->SetParameter (3,  -1.7511e-12) ;
+  fit_param0->SetParameter (4,  5.79317e-16) ;
+
+  fit_param0->SetLineWidth (1) ;
+  fit_param0->SetLineColor (kBlue + 1) ;
+  tg_par0->Fit (fit_param0) ;
+  
   cout << "---> INTERF PARAM 1\n" ;
-  c_par->cd (++i) ; tg_par1->Draw ("AL*") ; tg_par1->Fit ("pol2") ;
+  c_par->cd (++i) ; tg_par1->Draw ("AL*") ; 
+  TF1 * fit_param1 = new TF1 ("fit_param1", "[0] + [1] * x + [2] * x * x") ;
+  fit_param1->SetLineWidth (1) ;
+  fit_param1->SetLineColor (kBlue + 1) ;
+  tg_par1->Fit (fit_param1) ;
   cout << "---> INTERF PARAM 2\n" ;
   tg_par2->GetPoint (1, x, y) ;
   cout << y << endl ;
   c_par->cd (++i) ; tg_par2->Draw ("AL*") ; 
+  
   cout << "---> INTERF PARAM 3\n" ;
-  c_par->cd (++i) ; tg_par3->Draw ("AL*") ; tg_par3->Fit (sigmoid) ;
+  c_par->cd (++i) ; tg_par3->Draw ("AL*") ; 
+//  TF1 * sigmoid = new TF1 ("sigmoid", "[2] + [0] / (1.0 + TMath::Exp(-[1] * (x - [3])))") ;
+//  sigmoid->SetParameter (0, 25000) ;
+//  sigmoid->SetParameter (1, 0.005) ;
+//  sigmoid->SetParameter (2, 30000) ;
+//  sigmoid->SetParameter (3, 700) ;
+//  sigmoid->SetLineWidth (1) ;
+//  sigmoid->SetLineColor (kBlue + 1) ;
+  TF1 * fit_param3 = new TF1 ("fit_param3", "[0] + [1] * x + [2] * x * x") ;
+  fit_param3->SetLineWidth (1) ;
+  fit_param3->SetLineColor (kBlue + 1) ;
+  tg_par3->Fit (fit_param3) ;
  
+  c_par->Print ("params_interf.pdf", "pdf") ;
+
+  return 0 ; //FIXME
   
   TCanvas * c_sig_par = new TCanvas ("c_sig_par", "c_sig_par", 4000, 600) ;
   c_sig_par->Divide (4,2) ;
