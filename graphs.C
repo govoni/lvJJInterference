@@ -340,6 +340,9 @@ int graphs ()
   tg_sAi_par5->GetYaxis ()->SetTitle ("left alpha") ;
   tg_sAi_par6->GetYaxis ()->SetTitle ("left power law") ;
 
+  //PG PARAMETERS OF THE INTERFERENCE
+  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+  
   TCanvas * c_par = new TCanvas () ;
 
   c_par->Divide (2,2) ;
@@ -397,23 +400,36 @@ int graphs ()
  
   c_par->Print ("params_interf.pdf", "pdf") ;
 
-  return 0 ; //FIXME
+  //PG PARAMETERS OF THE MADGRAPH SIGNAL
+  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
   
   TCanvas * c_sig_par = new TCanvas ("c_sig_par", "c_sig_par", 4000, 600) ;
   c_sig_par->Divide (4,2) ;
   i = 0 ;
   cout << "---> SIGNAL PARAM 0\n" ;
-  c_sig_par->cd (++i) ; tg_sig_par0->Draw ("AL*") ; tg_sig_par0->Fit ("expo") ;
+  c_sig_par->cd (++i) ; tg_sig_par0->Draw ("AL*") ; 
+  tg_sig_par0->Fit ("expo") ;
+  tg_sig_par0->GetFunction ("expo")->SetLineWidth (1) ;
+  tg_sig_par0->GetFunction ("expo")->SetLineColor (kBlue + 1) ;
   cout << "---> SIGNAL PARAM 1\n" ;
-  c_sig_par->cd (++i) ; tg_sig_par1->Draw ("AL*") ; tg_sig_par1->Fit ("pol2") ;
+  c_sig_par->cd (++i) ; tg_sig_par1->Draw ("AL*") ; 
+  tg_sig_par1->Fit ("pol2") ;
+  tg_sig_par1->GetFunction ("pol2")->SetLineWidth (1) ;
+  tg_sig_par1->GetFunction ("pol2")->SetLineColor (kBlue + 1) ;
   cout << "---> SIGNAL PARAM 2\n" ;
-  c_sig_par->cd (++i) ; tg_sig_par2->Draw ("AL*") ; tg_sig_par2->Fit ("pol2") ;
+  c_sig_par->cd (++i) ; tg_sig_par2->Draw ("AL*") ;
+  tg_sig_par2->Fit ("pol2") ;
+  tg_sig_par2->GetFunction ("pol2")->SetLineWidth (1) ;
+  tg_sig_par2->GetFunction ("pol2")->SetLineColor (kBlue + 1) ;
   c_sig_par->cd (++i) ; tg_sig_par3->Draw ("AL*") ;
   c_sig_par->cd (++i) ; tg_sig_par4->Draw ("AL*") ;
   c_sig_par->cd (++i) ; tg_sig_par5->Draw ("AL*") ;
   c_sig_par->cd (++i) ; tg_sig_par6->Draw ("AL*") ;
 
   c_sig_par->Print ("params_signal.pdf", "pdf") ;
+  
+  //PG PARAMETERS OF THE PHANTOM SIGNAL + INTERFERENCE
+  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
   
   TCanvas * c_sAi_par = new TCanvas ("c_sAi_par", "c_sAi_par", 4000, 600) ;
   c_sAi_par->Divide (4,2) ;
