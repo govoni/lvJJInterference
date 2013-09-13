@@ -410,6 +410,23 @@ int macro_findInterferece (string filename, double mass)
 //  func_mg_1->SeaParLimits (5, 0.1, 5) ;              // left junction
   func_mg_1->SetParameter (6, 2.38) ;                // left power law order
 
+//  TF1 * func_mg_1 = new TF1 ("func_mg_1", doubleSuperGausCumCauda, 0, 2000, 7) ;
+//  func_mg_1->SetNpx (10000) ;
+//  func_mg_1->SetLineWidth (1) ;
+//  func_mg_1->SetLineColor (kBlue + 1) ;
+//  func_mg_1->SetParName (0, "N") ;
+//  func_mg_1->SetParName (1, "mean") ;
+//  func_mg_1->SetParName (2, "Nsigma") ;
+//  func_mg_1->SetParName (3, "alphaR") ;
+//  func_mg_1->SetParName (4, "alphaL") ;
+//
+//  func_mg_1->SetParameter (0, 1.) ;                  // multiplicative scale
+//  func_mg_1->SetParameter (1, mass) ;                // mean
+//  func_mg_1->SetParameter (2, h_MWW_mg->GetRMS ()) ; // gaussian sigma
+//  func_mg_1->SetParLimits (2, 0.1 * h_MWW_mg->GetRMS (), 20 * h_MWW_mg->GetRMS ()) ;
+//  func_mg_1->SetParameter (3, 1) ;                   // right junction
+//  func_mg_1->SetParameter (4, 1) ;                   // left junction
+
   int sign = 1 ;
   if (mass < 400) sign = -2 ;
   cout << "-------------------\nFITTING THE MADGRAPH SIGNAL\n\n-------------------\n" ;
@@ -529,7 +546,7 @@ int macro_findInterferece (string filename, double mass)
   TF1 * f_doublePeakModel = new TF1 ("f_doublePeakModel", doublePeakModel, 0, 2000, 4) ;
   f_doublePeakModel->SetNpx (10000) ;
   f_doublePeakModel->SetLineWidth (1) ;
-  f_doublePeakModel->SetLineColor (kRed + 2) ;
+  f_doublePeakModel->SetLineColor (kRed + 1) ;
 
   f_doublePeakModel->SetParName (0, "scale") ;
   f_doublePeakModel->SetParName (1, "shift") ;
@@ -538,7 +555,9 @@ int macro_findInterferece (string filename, double mass)
 
   f_doublePeakModel->SetParameter (0, -0.000002) ;
   f_doublePeakModel->SetParameter (1, mass) ; 
-  f_doublePeakModel->SetParameter (2, -0.002) ; 
+  f_doublePeakModel->FixParameter (2, .0008) ; 
+//  f_doublePeakModel->SetParameter (2, 10.) ; 
+//  f_doublePeakModel->SetParLimits (2, 0., 1000.) ; 
 //  f_doublePeakModel->SetParameter (2, fabs (func_ph_1->GetParameter (1) - func_mg_1->GetParameter (1))) ;
   double aveWidth = 0.5 * sqrt (
       func_ph_1->GetParameter (2) * func_ph_1->GetParameter (2) +
@@ -547,6 +566,9 @@ int macro_findInterferece (string filename, double mass)
   f_doublePeakModel->SetParameter (3, mass * mass * 0.25 * 0.25) ;
 //  f_doublePeakModel->SetParameter (3, 2 * aveWidth) ;
   delta->Fit ("f_doublePeakModel", "+", "same", 0.5 * mass - 50, 2 * mass) ;
+//  f_doublePeakModel->SetParameters (f_doublePeakModel->GetParameters ()) ;
+//  f_doublePeakModel->SetLineColor (kRed + 3) ;
+//  delta->Fit ("f_doublePeakModel", "+L", "same", 0.5 * mass - 50, 2 * mass) ;
 
   delta->Draw ("histsame") ;
   c3_leg = new TLegend (0.5,0.8,0.9,0.95) ;
