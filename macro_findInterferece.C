@@ -6,7 +6,19 @@ r00t -q macro_findInterferece.C\(\"findInterference.800.root\",800\)
 r00t -q macro_findInterferece.C\(\"findInterference.1000.root\",1000\)
 */
 
-#include "findInterferenceTools.h"
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+double max (double uno, double due)
+{
+  if (uno > due) return uno ;
+  return due ;
+}
+
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
 
 /*** double crystall ball ***/
 double doubleGausCrystalBallLowHigh (double* x, double* par)
