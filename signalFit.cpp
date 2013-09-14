@@ -1,5 +1,5 @@
 /*
-c++ `root-config --cflags --glibs` -lrooFit -lrooFitCore -o signalFit signalFit.cpp
+c++ `root-config --cflags --glibs` -lrooFit -lrooFitCore -o signalFit signalFit.cpp Functions.cc
 
 TBA
 http://root.cern.ch/root/html/src/RooCBShape.cxx.html#Uso4DD
@@ -23,6 +23,7 @@ http://root.cern.ch/root/html/src/RooCBShape.cxx.html#Uso4DD
 #include <vector>
 
 #include "RooFormulaVar.h"
+#include "RooCBShape.h"
 #include "RooBreitWigner.h"
 #include "RooDataHist.h"
 #include "RooArgList.h"
@@ -44,6 +45,8 @@ http://root.cern.ch/root/html/src/RooCBShape.cxx.html#Uso4DD
 #ifndef __CINT__
 #include "RooGlobalFunc.h"
 #endif 
+
+#include "Functions.h"
 
 using namespace RooFit ;
 using namespace std ;
@@ -73,11 +76,21 @@ int main (int argc, char ** argv)
   RooRealVar sigma_gaus ("sigma_gaus", "width of gaussian", 20., 0., 500.) ; 
   RooGaussian pdf_gaus ("pdf_gaus", "gaussian PDF", x, mean_gaus, sigma_gaus) ; 
 
-  RooRealVar mean_brwi ("mean_brwi", "mean of gaussian", 500., 200., 1500.) ; 
-  RooRealVar sigma_brwi ("sigma_brwi", "width of gaussian", 20., 0., 500.) ; 
-  RooBreitWigner pdf_brwi ("pdf_brwi", "gaussian PDF", x, mean_brwi, sigma_brwi) ; 
+  RooRealVar mean_brwi ("mean_brwi", "mean of breit wigner", 500., 200., 1500.) ; 
+  RooRealVar sigma_brwi ("sigma_brwi", "width of breit wigner", 20., 0., 500.) ; 
+  RooBreitWigner pdf_brwi ("pdf_brwi", "breit wigner PDF", x, mean_brwi, sigma_brwi) ; 
 
   RooFFTConvPdf model ("model", "pdf_brwi (X) pdf_gaus", x, pdf_brwi, pdf_gaus) ;
+
+  RooRealVar mean_cb ("mean_cb", "mean of crystal ball", 500., 200., 1500.) ; 
+  RooRealVar sigma_cb ("sigma_cb", "width of crystal ball", 20., 0., 500.) ; 
+  RooRealVar alpha_cb ("alpha_cb", "width of crystal ball", 20., 0., 500.) ; 
+  RooRealVar power_cb ("power_cb", "width of crystal ball", 20., 0., 500.) ; 
+  RooCBShape pdf_cb ("pdf_cb", "CB PDF", x, mean_cb, sigma_cb, alpha_cb, power_cb) ; 
+
+//  // Create a ROOT TF1 function
+//  TF1 * tf1_doubleCB = new TF1 ("tf1_doubleCB", crystalBallLowHigh, 0, 2000, 7) ;
+//  RooAbsReal* rf_doubleCB = bindFunction (tf1_doubleCB, x) ;
 
   vector<double> masses ;
   masses.push_back (350) ;
@@ -119,19 +132,33 @@ int main (int argc, char ** argv)
       
       //PG fitting the thing
       
+      RooPlot * fr_dum = x.frame () ;
+      rdh_dum->plotOn (fr_dum, MarkerStyle (4), MarkerColor (kGreen + 2)) ;
+
       mean_brwi.setVal (masses.at (i)) ;
       sigma_brwi.setVal (h_dum->GetRMS ()) ;
       mean_gaus.setVal (0) ;
       sigma_gaus.setVal (20.) ;
       
-//      model.fitTo (*rdh_dum, SumW2Error (kTRUE), PrintLevel (-1)) ;
-      pdf_brwi.fitTo (*rdh_dum, SumW2Error (kTRUE), PrintLevel (-1)) ;
+      model.fitTo (*rdh_dum, SumW2Error (kTRUE), PrintLevel (-1)) ;
+      model.plotOn (fr_dum, LineColor (kBlack), LineWidth (1)) ;
+//      pdf_brwi.fitTo (*rdh_dum, SumW2Error (kTRUE), PrintLevel (-1)) ;
+//      pdf_brwi.plotOn (fr_dum, LineColor (kBlue), LineWidth (1)) ;
+
+      mean_cb.setVal (masses.at (i)) ;
+      sigma_cb.setVal (h_dum->GetRMS ()) ;
+      alpha_cb.setVal (1) ;
+      power_cb.setVal (3) ;
+      pdf_cb.fitTo (*rdh_dum, SumW2Error (kTRUE), PrintLevel (-1)) ;
+      pdf_cb.plotOn (fr_dum, LineColor (kRed), LineWidth (1)) ;
+
+      mean_gaus.setVal (masses.at (i)) ;
+      sigma_gaus.setVal (h_dum->GetRMS ()) ;
+      pdf_gaus.fitTo (*rdh_dum, SumW2Error (kTRUE), PrintLevel (-1)) ;
+      pdf_gaus.plotOn (fr_dum, LineColor (kGreen), LineWidth (1)) ;
       
       TCanvas * c_dum = new TCanvas () ;
       c_dum->SetLogy () ;
-      RooPlot * fr_dum = x.frame () ;
-      rdh_dum->plotOn (fr_dum, MarkerStyle (4), MarkerColor (kGreen + 2)) ;
-      pdf_brwi.plotOn (fr_dum, LineColor (kBlue), LineWidth (1)) ;
       fr_dum->Draw () ;
       name = "roofit_signal_" ;
       name += masses.at (i) ;
