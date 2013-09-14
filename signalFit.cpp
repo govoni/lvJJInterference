@@ -11,12 +11,17 @@ c++ `root-config --cflags --glibs` -lrooFit -lrooFitCore -o signalFit signalFit.
 #include "TFile.h"
 #include "TLegend.h"
 #include "TTree.h"
+#include "TString.h"
 #include "TROOT.h"
 #include "TStyle.h"
 #include "TNtuple.h"
 #include <fstream>
 
 #include "RooFormulaVar.h"
+#include "RooBreitWigner.h"
+#include "RooDataHist.h"
+#include "RooArgList.h"
+#include "RooFFTConvPdf.h"
 #include "RooKeysPdf.h"
 #include "RooExponential.h"
 #include "RooArgusBG.h"
@@ -64,7 +69,7 @@ int main (int argc, char ** argv)
 
   RooRealVar mean_brwi ("mean_brwi", "mean of gaussian", 500., 200., 1500.) ; 
   RooRealVar sigma_brwi ("sigma_brwi", "width of gaussian", 20., 0., 500.) ; 
-  RooGaussian pdf_brwi ("pdf_brwi", "gaussian PDF", x, mean_brwi, sigma_brwi) ; 
+  RooBreitWigner pdf_brwi ("pdf_brwi", "gaussian PDF", x, mean_brwi, sigma_brwi) ; 
 
   RooFFTConvPdf model ("model", "pdf_brwi (X) pdf_gaus", x, pdf_brwi, pdf_gaus) ;
 
@@ -76,9 +81,27 @@ int main (int argc, char ** argv)
   masses.push_back (1000) ;
   
   vector<string> filenames ;
-  vector<TFile *> inputFiles ;
+  filenames.push_back ("findInterference.350.root") ;
+  filenames.push_back ("findInterference.500.root") ;
+  filenames.push_back ("findInterference.650.root") ;
+  filenames.push_back ("findInterference.800.root") ;
+  filenames.push_back ("findInterference.1000.root") ;
+
+  vector<TFile *> inputfiles ;
   vector<TH1F *> h_mg_signals ;
   vector<RooDataHist *> rdh_mg_signals ;
+  for (int i = 0 ; i < filenames.size () ; ++i)
+    {
+      TFile * f_dum = new TFile (filenames.at (i).c_str ()) ;
+      inputfiles.push_back (f_dum) ;
+      TH1F * h_dum = (TH1F *) f_dum->Get ("h_MWW_mg") ;
+      h_mg_signals.push_back (h_dum) ;
+      TString name = "rdh_" ;
+      name += masses.at (i) ;
+      RooDataHist * rdh_dum = new RooDataHist (name.Data (), name.Data (), RooArgList (x), h_dum) ;
+    
+    }
+  
 
 
 
