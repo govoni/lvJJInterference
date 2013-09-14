@@ -16,6 +16,7 @@ c++ `root-config --cflags --glibs` -lrooFit -lrooFitCore -o signalFit signalFit.
 #include "TStyle.h"
 #include "TNtuple.h"
 #include <fstream>
+#include <vector>
 
 #include "RooFormulaVar.h"
 #include "RooBreitWigner.h"
@@ -41,6 +42,7 @@ c++ `root-config --cflags --glibs` -lrooFit -lrooFitCore -o signalFit signalFit.
 #endif 
 
 using namespace RooFit ;
+using namespace std ;
 
 
 int main (int argc, char ** argv)
@@ -92,6 +94,8 @@ int main (int argc, char ** argv)
   vector<RooDataHist *> rdh_mg_signals ;
   for (int i = 0 ; i < filenames.size () ; ++i)
     {
+      //PG reading the info from the file
+      
       TFile * f_dum = new TFile (filenames.at (i).c_str ()) ;
       inputfiles.push_back (f_dum) ;
       TH1F * h_dum = (TH1F *) f_dum->Get ("h_MWW_mg") ;
@@ -99,6 +103,16 @@ int main (int argc, char ** argv)
       TString name = "rdh_" ;
       name += masses.at (i) ;
       RooDataHist * rdh_dum = new RooDataHist (name.Data (), name.Data (), RooArgList (x), h_dum) ;
+      rdh_mg_signals.push_back (rdh_dum) ;
+      
+      //PG fitting the thing
+      
+      mean_brwi.setVal (masses.at (i)) ;
+      sigma_brwi.setVal (h_dum->GetRMS ()) ;
+      mean_gaus.setVal (0) ;
+      sigma_gaus.setVal (20.) ;
+      
+      model.fitTo (*rdh_dum, Extended ()) ;
     
     }
   
