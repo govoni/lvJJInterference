@@ -92,8 +92,14 @@ int main (int argc, char ** argv)
   vector<TFile *> inputfiles ;
   vector<TH1F *> h_mg_signals ;
   vector<RooDataHist *> rdh_mg_signals ;
+  vector<RooPlot *> c_frames ;
+  
   for (int i = 0 ; i < filenames.size () ; ++i)
     {
+      cout << "--------------------------------------------------------\n\n" ;
+      cout << "    working on mass " << masses.at (i) << "\n" ;
+      cout << "\n--------------------------------------------------------\n" ;
+    
       //PG reading the info from the file
       
       TFile * f_dum = new TFile (filenames.at (i).c_str ()) ;
@@ -112,7 +118,17 @@ int main (int argc, char ** argv)
       mean_gaus.setVal (0) ;
       sigma_gaus.setVal (20.) ;
       
-      model.fitTo (*rdh_dum, Extended ()) ;
+      model.fitTo (*rdh_dum, SumW2Error (kTRUE)) ;
+      
+      TCanvas * c_dum = new TCanvas () ;
+      RooPlot * fr_dum = x.frame () ;
+      rdh_dum->plotOn (fr_dum, MarkerStyle (4), MarkerColor (kGreen + 2)) ;
+      model.plotOn (fr_dum, LineColor (kBlue), LineWidth (1)) ;
+      fr_dum->Draw () ;
+      name = "roofit_signal_" ;
+      name += masses.at (i) ;
+      name += ".pdf" ;
+      c_dum->Print (name, "pdf") ;
     
     }
   
