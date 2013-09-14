@@ -1,5 +1,9 @@
 /*
 c++ `root-config --cflags --glibs` -lrooFit -lrooFitCore -o signalFit signalFit.cpp
+
+TBA
+http://root.cern.ch/root/html/src/RooCBShape.cxx.html#Uso4DD
+
 */
 
 #include "TProfile2D.h"
@@ -96,15 +100,17 @@ int main (int argc, char ** argv)
   
   for (int i = 0 ; i < filenames.size () ; ++i)
     {
-      cout << "--------------------------------------------------------\n\n" ;
+      cout << "------------------------------------------------------------------------------------------\n\n" ;
       cout << "    working on mass " << masses.at (i) << "\n" ;
-      cout << "\n--------------------------------------------------------\n" ;
+      cout << "\n------------------------------------------------------------------------------------------\n\n" ;
     
       //PG reading the info from the file
       
       TFile * f_dum = new TFile (filenames.at (i).c_str ()) ;
       inputfiles.push_back (f_dum) ;
       TH1F * h_dum = (TH1F *) f_dum->Get ("h_MWW_mg") ;
+      h_dum->Sumw2 () ;
+      for (int j = 1 ; j <= h_dum->GetNbinsX () ; ++j) if (h_dum->GetBinContent (j) - h_dum->GetBinError (j) < 0) h_dum->SetBinError (j, 0.) ;
       h_mg_signals.push_back (h_dum) ;
       TString name = "rdh_" ;
       name += masses.at (i) ;
@@ -118,12 +124,14 @@ int main (int argc, char ** argv)
       mean_gaus.setVal (0) ;
       sigma_gaus.setVal (20.) ;
       
-      model.fitTo (*rdh_dum, SumW2Error (kTRUE)) ;
+//      model.fitTo (*rdh_dum, SumW2Error (kTRUE), PrintLevel (-1)) ;
+      pdf_brwi.fitTo (*rdh_dum, SumW2Error (kTRUE), PrintLevel (-1)) ;
       
       TCanvas * c_dum = new TCanvas () ;
+      c_dum->SetLogy () ;
       RooPlot * fr_dum = x.frame () ;
       rdh_dum->plotOn (fr_dum, MarkerStyle (4), MarkerColor (kGreen + 2)) ;
-      model.plotOn (fr_dum, LineColor (kBlue), LineWidth (1)) ;
+      pdf_brwi.plotOn (fr_dum, LineColor (kBlue), LineWidth (1)) ;
       fr_dum->Draw () ;
       name = "roofit_signal_" ;
       name += masses.at (i) ;
