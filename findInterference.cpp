@@ -138,6 +138,13 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
 
 //      if (totalCount < 10) cout << "PARTICLES " <<  v_f_leptons.size () << "\t" << v_f_neutrinos.size () << "\t" << v_f_quarks.size () << "\n" ;
 
+      double weight = 1. ;
+      float scale = reader.hepeup.SCALUP ;
+      if (referenceScale != 0 )
+        weight = LHAPDF::xfx (x[0], referenceScale, flavour[0]) * LHAPDF::xfx (x[1], referenceScale, flavour[1]) /
+                 (LHAPDF::xfx (x[0], scale, flavour[0]) * LHAPDF::xfx (x[1], scale, flavour[1])) ;
+      totalCount += weight ;
+
       int warnNum = 0 ;
       if (v_f_quarks.size () < 4)
         {
@@ -184,16 +191,9 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
                              (v_f_quarks.at (Wpair.first) + v_f_quarks.at (Wpair.second)) ;
 
       //PG the scale:
-      float scale = reader.hepeup.SCALUP ;
       Histos.m_h_scale->Fill (scale) ;
 
-      double weight = 1. ;
-      if (referenceScale != 0 )
-        weight = LHAPDF::xfx (x[0], referenceScale, flavour[0]) * LHAPDF::xfx (x[1], referenceScale, flavour[1]) /
-                 (LHAPDF::xfx (x[0], scale, flavour[0]) * LHAPDF::xfx (x[1], scale, flavour[1])) ;
-
       Histos.m_h_MWW->Fill (total.M (), weight) ;
-      totalCount += weight ;
       ++events ;
       if (max > 0 && max < events) 
         {
