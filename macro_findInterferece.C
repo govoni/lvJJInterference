@@ -270,6 +270,19 @@ int findBin (TH1F * h, double val)
 }
 
 
+
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+double normaliseToBinWidth (TH1F * h)
+{
+  double scale = h->GetNbinsX () / (h->GetXaxis ()->GetXmax () - h->GetXaxis ()->GetXmin ()) ;
+  h->Scale (scale) ;
+  return scale ;  
+}
+
+
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
@@ -293,9 +306,21 @@ int macro_findInterferece (string filename, double mass)
   
   int scaling = 1 ;
   
+  cout << "rebinning factor: " << reBin << "\n" ;
+  cout << "MG bins number before rebinning: " << h_MWW_mg->GetNbinsX () << "\n" ;
+  
   h_MWW_phbkgsig->Rebin (reBin) ;
   h_MWW_phbkg   ->Rebin (reBin) ;
   h_MWW_mg      ->Rebin (reBin) ;
+
+  cout << "MG bins number after rebinning: " << h_MWW_mg->GetNbinsX () << "\n" ;
+
+  //PG normalize to the bin width
+  //PG ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+  normaliseToBinWidth (h_MWW_phbkgsig) ;
+  normaliseToBinWidth (h_MWW_phbkg) ;
+  normaliseToBinWidth (h_MWW_mg) ;
 
   double ymax= 2000. ;
   double ymin= 0. ;
@@ -440,7 +465,9 @@ int macro_findInterferece (string filename, double mass)
 
   ymax = h_MWW_mg->GetBinContent (h_MWW_mg->GetMaximumBin ()) ;
   ymin = h_MWW_mg->GetBinContent (h_MWW_mg->GetMinimumBin ()) ;
+  if (ymin <= 0) ymin = ymax / 10000. ; 
   TH1F * c4_mg_frame = (TH1F *) c4_mg->DrawFrame (200, 0.9 * ymin, rangeScale * mass, 1.1 * ymax) ;
+  c4_mg->SetLogy () ;
   c4_mg_frame->SetTitle (0) ;
   c4_mg_frame->SetStats (0) ;
   c4_mg_frame->GetXaxis ()->SetTitle ("m_{WW} (GeV)") ;
@@ -477,7 +504,7 @@ int macro_findInterferece (string filename, double mass)
   
   setParNamesdoubleGausCrystalBallLowHigh (func_ph_1) ;
 
-  func_ph_1->SetParameter (0, 1.) ;                      // multiplicative scale
+  func_ph_1->SetParameter (0, diff->Integral ()) ;       // multiplicative scale
   func_ph_1->SetParameter (1, mass) ;                    // mean
   func_ph_1->SetParameter (2, gauss->GetParameter (2)) ; // gaussian sigma
 //  func_ph_1->SetParLimits (2, 0.1 * gauss->GetParameter (2), 20 * gauss->GetParameter (2)) ;

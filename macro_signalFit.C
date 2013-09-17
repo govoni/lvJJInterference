@@ -7,6 +7,17 @@ r00t -q macro_findInterferece.C\(\"findInterference.1000.root\",1000\)
 */
 
 
+/*** right-hand side tail fit ***/
+double expOfPowerLaw (double* x, double* par)
+{
+  double mean   = par[1] ; // mean
+  double gamma  = par[2] ; // power law at the exponent
+  double xx = x[0] - mean ;
+
+  return par [0] * exp (-1 * pow (xx, gamma)) ;
+}
+
+
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
@@ -273,6 +284,17 @@ int findBin (TH1F * h, double val)
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
+double normaliseToBinWidth (TH1F * h)
+{
+  double scale = h->GetNbinsX () / (h->GetXaxis ()->GetXmax () - h->GetXaxis ()->GetXmin ()) ;
+  h->Scale (scale) ;
+  return scale ;  
+}
+
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
 int macro_signalFit (string filename, double mass)                                                        
 {        
 
@@ -292,6 +314,8 @@ int macro_signalFit (string filename, double mass)
   int scaling = 1 ;
   
   h_MWW_mg      ->Rebin (reBin) ;
+
+  normaliseToBinWidth (h_MWW_mg) ;
 
   double ymax= 2000. ;
   double ymin= 0. ;
@@ -407,6 +431,25 @@ int macro_signalFit (string filename, double mass)
   l_leftTh_2->SetLineColor (kRed + 1) ;
   l_leftTh_2->SetLineStyle (2) ;
 
+
+  //PG tail fitting
+  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+  double start_3 = rightTh_2 ; //+ 0.5 * func_mg_2->GetParameter (2) ;
+  TF1 * func_mg_3 = new TF1 ("func_mg_3", expOfPowerLaw, 0, 2000, 7) ;
+  func_mg_3->SetNpx (10000) ;
+  func_mg_3->SetLineWidth (1) ;
+  func_mg_3->SetLineColor (kOrange + 1) ;
+  func_mg_3->SetParName (0, "N") ;
+  func_mg_3->SetParName (1, "mean") ;
+  func_mg_3->SetParName (2, "gamma") ;
+  func_mg_3->SetParameter (0, h_MWW_mg->Integral (start_3, 2 * mass)) ;            // multiplicative scale
+  func_mg_3->FixParameter (1, mass) ;                        // mean
+  func_mg_3->SetParameter (2, 1) ; // gaussian sigma
+
+  h_MWW_mg->Fit ("func_mg_3", "L", "", start_3, 2 * mass) ;
+
+
   //PG plotting
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
   
@@ -420,7 +463,21 @@ int macro_signalFit (string filename, double mass)
   h_MWW_mg->Draw ("EPsame") ;
   func_mg_1->Draw ("same") ;
   func_mg_2->Draw ("same") ;
+  func_mg_3->Draw ("same") ;
   
+  
+  char testo[10] ;
+  sprintf (testo, "exp pol. %.2f", func_mg_3->GetParameter (2)) ;
+
+  leg = new TLegend (0.35,0.26,0.6,0.4) ;
+  leg->SetTextFont (42) ;
+  leg->SetBorderSize (0) ;
+  leg->SetFillStyle (0) ;
+  leg->AddEntry (func_mg_1, "double CB", "l") ;
+  leg->AddEntry (func_mg_2, "exp tails", "l") ;
+  leg->AddEntry (func_mg_3, testo, "l") ;
+  leg->AddEntry (l_rightTh_2, "boundaries", "l") ;
+  leg->Draw () ;
 
   l_rightTh_1->Draw ("same") ;
   l_leftTh_1->Draw ("same") ;
