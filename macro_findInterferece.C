@@ -155,6 +155,7 @@ Double_t doubleSlope (Double_t * xx, Double_t * par)
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
+
 Double_t doublePeakModel (Double_t * xx, Double_t * par)
 {
   double scale    = par[0] ;
@@ -163,10 +164,19 @@ Double_t doublePeakModel (Double_t * xx, Double_t * par)
   double gamma    = par[3] ;
   double x = xx[0] - shift ;
 
-  double norm = 1. / (shift * shift + gamma) - 1 / ((shift + 2 * distance) * (shift + 2 * distance) + gamma) ;
-  return scale * (1. / norm) * ( 1. / ((x - distance) * (x - distance) + gamma) - 1 / ((x + distance) * (x + distance) + gamma)) ;
+  double max = 1./3. * sqrt( -3. * gamma + 3. * distance * distance + 6. * sqrt( gamma * gamma + distance * distance * gamma + pow( distance, 4.)));
+  double height = fabs ( 1. / ((max - distance) * (max - distance) + gamma) - 1 / ((max + distance) * (max + distance) + gamma)) ;
+  double norm = 1. / height ;
+  
+  return scale * norm * ( 1. / ((x - distance) * (x - distance) + gamma) - 1 / ((x + distance) * (x + distance) + gamma)) ;
+
+//  double norm = 1. / (shift * shift + gamma) - 1 / ((shift + 2 * distance) * (shift + 2 * distance) + gamma) ;
+//  return scale * (1. / norm) * ( 1. / ((x - distance) * (x - distance) + gamma) - 1 / ((x + distance) * (x + distance) + gamma)) ;
+//  return scale * norm * ( 1. / ((x - distance) * (x - distance) + gamma) - 1 / ((x + distance) * (x + distance) + gamma)) ;
 //  return scale * ( 1. / ((x - distance) * (x - distance) + gamma) - 1 / ((x + distance) * (x + distance) + gamma)) ;
+
 }
+
 
 
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -424,16 +434,16 @@ int macro_findInterferece (string filename, double mass)
   setParNamesdoubleGausCrystalBallLowHigh (func_mg_1) ;
   cout << "PREFIT RMS : " << h_MWW_mg->GetRMS () << endl ;
 
-  func_mg_1->SetParameter (0, 1.) ;                  // multiplicative scale
-  func_mg_1->SetParameter (1, mass) ;                // mean
-  func_mg_1->SetParameter (2, h_MWW_mg->GetRMS ()) ; // gaussian sigma
+  func_mg_1->SetParameter (0, h_MWW_mg->GetBinContent (h_MWW_mg->GetMaximumBin ())) ;  // multiplicative scale
+  func_mg_1->SetParameter (1, mass) ;                                                  // mean
+  func_mg_1->SetParameter (2, h_MWW_mg->GetRMS ()) ;                                   // gaussian sigma
   func_mg_1->SetParLimits (2, 0.1 * h_MWW_mg->GetRMS (), 20 * h_MWW_mg->GetRMS ()) ;
-  func_mg_1->SetParameter (3, 1.5) ;                   // right junction
-//  func_mg_1->SetParLimits (3, 0.1, 5) ;              // right junction
-  func_mg_1->SetParameter (4, 2) ;                   // right power law order
-  func_mg_1->SetParameter (5, 0.8) ;                   // left junction
-//  func_mg_1->SeaParLimits (5, 0.1, 5) ;              // left junction
-  func_mg_1->SetParameter (6, 2.38) ;                // left power law order
+  func_mg_1->SetParameter (3, 1.5) ;                                                   // right junction
+//  func_mg_1->SetParLimits (3, 0.1, 5) ;                                              // right junction
+  func_mg_1->SetParameter (4, 2) ;                                                     // right power law order
+  func_mg_1->SetParameter (5, 0.8) ;                                                   // left junction
+//  func_mg_1->SeaParLimits (5, 0.1, 5) ;                                              // left junction
+  func_mg_1->SetParameter (6, 2.38) ;                                                  // left power law order
 
 //  TF1 * func_mg_1 = new TF1 ("func_mg_1", doubleSuperGausCumCauda, 0, 2000, 7) ;
 //  func_mg_1->SetNpx (10000) ;
@@ -580,9 +590,12 @@ int macro_findInterferece (string filename, double mass)
   f_doublePeakModel->SetParName (2, "distance") ;
   f_doublePeakModel->SetParName (3, "gamma") ; 
 
-  f_doublePeakModel->SetParameter (0, -0.000002) ;
+  f_doublePeakModel->SetParameter (0, -0.05 * h_MWW_mg->GetBinContent (h_MWW_mg->GetMaximumBin ())) ;
+//  f_doublePeakModel->SetParameter (0, -0.000002) ;
   f_doublePeakModel->SetParameter (1, mass) ; 
-  f_doublePeakModel->FixParameter (2, .0008) ; 
+  f_doublePeakModel->FixParameter (2, 0.0008) ; 
+  f_doublePeakModel->SetParameter (3, mass * mass * 0.1 * 0.1) ;
+
 //  f_doublePeakModel->SetParameter (2, 10.) ; 
 //  f_doublePeakModel->SetParLimits (2, 0., 1000.) ; 
 //  f_doublePeakModel->SetParameter (2, fabs (func_ph_1->GetParameter (1) - func_mg_1->GetParameter (1))) ;
@@ -590,7 +603,6 @@ int macro_findInterferece (string filename, double mass)
       func_ph_1->GetParameter (2) * func_ph_1->GetParameter (2) +
       func_mg_1->GetParameter (2) * func_mg_1->GetParameter (2)  
     ) ;
-  f_doublePeakModel->SetParameter (3, mass * mass * 0.25 * 0.25) ;
 //  f_doublePeakModel->SetParameter (3, 2 * aveWidth) ;
   delta->Fit ("f_doublePeakModel", "+", "same", 0.5 * mass - 50, 2 * mass) ;
 //  f_doublePeakModel->SetParameters (f_doublePeakModel->GetParameters ()) ;
@@ -598,6 +610,7 @@ int macro_findInterferece (string filename, double mass)
 //  delta->Fit ("f_doublePeakModel", "+L", "same", 0.5 * mass - 50, 2 * mass) ;
 
   delta->Draw ("histsame") ;
+//  f_doublePeakModel->Draw ("same") ;
   c3_leg = new TLegend (0.5,0.8,0.9,0.95) ;
   c3_leg->SetFillStyle (0) ;
   c3_leg->SetBorderSize (0) ;
