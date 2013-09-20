@@ -352,25 +352,27 @@ int macro_signalFit (string filename, double mass)
   setParNamesdoubleGausCrystalBallLowHigh (func_mg_1) ;
   cout << "PREFIT RMS : " << h_MWW_mg->GetRMS () << endl ;
 
-  func_mg_1->SetParameter (0, 1.) ;                  // multiplicative scale
-  func_mg_1->SetParameter (1, mass) ;                // mean
-  func_mg_1->SetParameter (2, h_MWW_mg->GetRMS ()) ; // gaussian sigma
+  func_mg_1->SetParameter (0, h_MWW_mg->GetBinContent (h_MWW_mg->GetMaximumBin ())) ;  // multiplicative scale
+  func_mg_1->SetParameter (1, mass) ;                                                  // mean
+  func_mg_1->SetParameter (2, h_MWW_mg->GetRMS ()) ;                                   // gaussian sigma
   func_mg_1->SetParLimits (2, 0.1 * h_MWW_mg->GetRMS (), 20 * h_MWW_mg->GetRMS ()) ;
-  func_mg_1->SetParameter (3, 1.5) ;                   // right junction
-//  func_mg_1->SetParLimits (3, 0.1, 5) ;              // right junction
-  func_mg_1->SetParameter (4, 2) ;                   // right power law order
-  func_mg_1->SetParameter (5, 0.8) ;                   // left junction
-//  func_mg_1->SeaParLimits (5, 0.1, 5) ;              // left junction
-  func_mg_1->SetParameter (6, 2.38) ;                // left power law order
+  func_mg_1->SetParameter (3, 1.5) ;                                                   // right junction
+//  func_mg_1->SetParLimits (3, 0.1, 5) ;                                              // right junction
+  func_mg_1->SetParameter (4, 2) ;                                                     // right power law order
+  func_mg_1->SetParameter (5, 0.95) ;                                                   // left junction
+//  func_mg_1->FixParameter (5, 0.95) ;                                                   // left junction
+//  func_mg_1->SeaParLimits (5, 0.1, 5) ;                                              // left junction
+  func_mg_1->SetParameter (6, 2.38) ;                                                  // left power law order
 
   int sign = 1 ;
   if (mass < 400) sign = -2 ;
-  cout << "-------------------\nFITTING THE MADGRAPH SIGNAL\n\n-------------------\n" ;
+
+  cout << "-------------------\nFITTING W/ DOUBLE CB\n\n-------------------\n" ;
   h_MWW_mg->Fit ("func_mg_1", "", "", 0.5 * mass + sign * 50, 2 * mass) ;
   cout << "CHI2 / NDOF = " << func_mg_1->GetChisquare () /func_mg_1->GetNDF () << endl ;
   func_mg_1->SetParameters (func_mg_1->GetParameters ()) ;
   func_mg_1->SetLineColor (kBlue + 3) ;
-  cout << "-------------------\nFITTING THE MADGRAPH SIGNAL W/ LIKELIHOOD\n\n-------------------\n" ;
+  cout << "-------------------\nFITTING W/ DOUBLE CB W/ LIKELIHOOD\n\n-------------------\n" ;
   h_MWW_mg->Fit ("func_mg_1", "L", "", 0.5 * mass - 50, 2 * mass) ;
   cout << "CHI2 / NDOF = " << func_mg_1->GetChisquare () /func_mg_1->GetNDF () << endl ;
 
@@ -385,70 +387,73 @@ int macro_signalFit (string filename, double mass)
   l_leftTh_1->SetLineColor (kBlue + 1) ;
   l_leftTh_1->SetLineStyle (2) ;
 
-  //PG super gaus cum cauda 
-  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-  
-  TF1 * func_mg_2 = new TF1 ("func_mg_2", doubleSuperGausCumCauda, 0, 2000, 7) ;
-  func_mg_2->SetNpx (10000) ;
-  func_mg_2->SetLineWidth (1) ;
-  func_mg_2->SetLineColor (kRed + 1) ;
-  func_mg_2->SetParName (0, "N") ;
-  func_mg_2->SetParName (1, "mean") ;
-  func_mg_2->SetParName (2, "Nsigma") ;
-  func_mg_2->SetParName (3, "alphaR") ;
-  func_mg_2->SetParName (4, "alphaL") ;
-
-  func_mg_2->SetParameter (0, h_MWW_mg->GetEntries ()) ;                  // multiplicative scale
-  func_mg_2->SetParameter (1, mass) ;                        // mean
-  func_mg_2->FixParameter (2, func_mg_1->GetParameter (2)) ; // gaussian sigma
-//  func_mg_2->SetParameter (2, h_MWW_mg->GetRMS ()) ;       // gaussian sigma
-//  func_mg_2->SetParLimits (2, 0.5 * h_MWW_mg->GetRMS (), 20 * h_MWW_mg->GetRMS ()) ;
-  func_mg_2->FixParameter (3, func_mg_1->GetParameter (3)) ;                   // right junction
-  func_mg_2->FixParameter (4,  func_mg_1->GetParameter (5)) ;                   // left junction
-//  func_mg_2->SetParameter (3, 2) ;                   // right junction
-//  func_mg_2->SetParameter (4, 2) ;                   // left junction
-
-  int sign = 1 ;
-  if (mass < 400) sign = -2 ;
-  cout << "-------------------\nFITTING THE MADGRAPH SIGNAL\n\n-------------------\n" ;
-  h_MWW_mg->Fit ("func_mg_2", "", "", 0.5 * mass + sign * 50, 2 * mass) ;
-  cout << "CHI2 / NDOF = " << func_mg_2->GetChisquare () /func_mg_2->GetNDF () << endl ;
-  func_mg_2->SetParameters (func_mg_2->GetParameters ()) ;
-  func_mg_2->FixParameter (3, func_mg_1->GetParameter (3)) ;                   // right junction
-  func_mg_2->FixParameter (4,  func_mg_1->GetParameter (5)) ;                   // left junction
-  func_mg_2->SetLineColor (kRed + 3) ;
-  cout << "-------------------\nFITTING THE MADGRAPH SIGNAL W/ LIKELIHOOD\n\n-------------------\n" ;
-  h_MWW_mg->Fit ("func_mg_2", "L", "", 0.5 * mass - 50, 2 * mass) ;
-  cout << "CHI2 / NDOF = " << func_mg_2->GetChisquare () /func_mg_2->GetNDF () << endl ;
-
-  double rightTh_2 = fabs (func_mg_2->GetParameter (3)) * func_mg_2->GetParameter (2) + func_mg_2->GetParameter (1) ;
-  double leftTh_2  = -1 * fabs (func_mg_2->GetParameter (4)) * func_mg_2->GetParameter (2) + func_mg_2->GetParameter (1) ;
-
-  TLine * l_rightTh_2 = new TLine (rightTh_2, 0.9 * ymin, rightTh_2, 1.1 * ymax) ;
-  l_rightTh_2->SetLineColor (kRed + 1) ;
-  l_rightTh_2->SetLineStyle (2) ;
-  TLine * l_leftTh_2 = new TLine (leftTh_2, 0.9 * ymin, leftTh_2, 1.1 * ymax) ;
-  l_leftTh_2->SetLineColor (kRed + 1) ;
-  l_leftTh_2->SetLineStyle (2) ;
-
-
+//  //PG super gaus cum cauda 
+//  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+//  
+//  TF1 * func_mg_2 = new TF1 ("func_mg_2", doubleSuperGausCumCauda, 0, 2000, 7) ;
+//  func_mg_2->SetNpx (10000) ;
+//  func_mg_2->SetLineWidth (1) ;
+//  func_mg_2->SetLineColor (kRed + 1) ;
+//  func_mg_2->SetParName (0, "N") ;
+//  func_mg_2->SetParName (1, "mean") ;
+//  func_mg_2->SetParName (2, "Nsigma") ;
+//  func_mg_2->SetParName (3, "alphaR") ;
+//  func_mg_2->SetParName (4, "alphaL") ;
+//
+////  func_mg_2->SetParameter (0, h_MWW_mg->GetBinContent (h_MWW_mg->GetMaximumBin ())) ;                  // multiplicative scale
+//  func_mg_2->SetParameter (0, 1.) ;                  // multiplicative scale
+//  func_mg_2->SetParameter (1, mass) ;                        // mean
+//  func_mg_2->FixParameter (2, func_mg_1->GetParameter (2)) ; // gaussian sigma
+////  func_mg_2->SetParameter (2, h_MWW_mg->GetRMS ()) ;       // gaussian sigma
+////  func_mg_2->SetParLimits (2, 0.5 * h_MWW_mg->GetRMS (), 20 * h_MWW_mg->GetRMS ()) ;
+//  func_mg_2->FixParameter (3, func_mg_1->GetParameter (3)) ;                   // right junction
+//  func_mg_2->FixParameter (4,  func_mg_1->GetParameter (5)) ;                   // left junction
+////  func_mg_2->SetParameter (3, 2) ;                   // right junction
+////  func_mg_2->SetParameter (4, 2) ;                   // left junction
+//
+//  int sign = 1 ;
+//  if (mass < 400) sign = -2 ;
+//  cout << "-------------------\nFITTING W/ SUPER GAUSS CC\n\n-------------------\n" ;
+//  h_MWW_mg->Fit ("func_mg_2", "", "", 0.5 * mass + sign * 50, 2 * mass) ;
+//  cout << "CHI2 / NDOF = " << func_mg_2->GetChisquare () /func_mg_2->GetNDF () << endl ;
+//  func_mg_2->SetParameters (func_mg_2->GetParameters ()) ;
+//  func_mg_2->FixParameter (3, func_mg_1->GetParameter (3)) ;                   // right junction
+//  func_mg_2->FixParameter (4,  func_mg_1->GetParameter (5)) ;                   // left junction
+//  func_mg_2->SetLineColor (kRed + 3) ;
+//  cout << "-------------------\nFITTING W/ SUPER GAUSS CC W/ LIKELIHOOD\n\n-------------------\n" ;
+//  h_MWW_mg->Fit ("func_mg_2", "L", "", 0.5 * mass - 50, 2 * mass) ;
+//  cout << "CHI2 / NDOF = " << func_mg_2->GetChisquare () /func_mg_2->GetNDF () << endl ;
+//
+//  double rightTh_2 = fabs (func_mg_2->GetParameter (3)) * func_mg_2->GetParameter (2) + func_mg_2->GetParameter (1) ;
+//  double leftTh_2  = -1 * fabs (func_mg_2->GetParameter (4)) * func_mg_2->GetParameter (2) + func_mg_2->GetParameter (1) ;
+//
+//  TLine * l_rightTh_2 = new TLine (rightTh_2, 0.9 * ymin, rightTh_2, 1.1 * ymax) ;
+//  l_rightTh_2->SetLineColor (kRed + 1) ;
+//  l_rightTh_2->SetLineStyle (2) ;
+//  TLine * l_leftTh_2 = new TLine (leftTh_2, 0.9 * ymin, leftTh_2, 1.1 * ymax) ;
+//  l_leftTh_2->SetLineColor (kRed + 1) ;
+//  l_leftTh_2->SetLineStyle (2) ;
+//
+//
   //PG tail fitting
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
-  double start_3 = rightTh_2 ; //+ 0.5 * func_mg_2->GetParameter (2) ;
-  TF1 * func_mg_3 = new TF1 ("func_mg_3", expOfPowerLaw, 0, 2000, 7) ;
-  func_mg_3->SetNpx (10000) ;
-  func_mg_3->SetLineWidth (1) ;
-  func_mg_3->SetLineColor (kOrange + 1) ;
-  func_mg_3->SetParName (0, "N") ;
-  func_mg_3->SetParName (1, "mean") ;
-  func_mg_3->SetParName (2, "gamma") ;
-  func_mg_3->SetParameter (0, h_MWW_mg->Integral (start_3, 2 * mass)) ;            // multiplicative scale
-  func_mg_3->FixParameter (1, mass) ;                        // mean
-  func_mg_3->SetParameter (2, 1) ; // gaussian sigma
-
-  h_MWW_mg->Fit ("func_mg_3", "L", "", start_3, 2 * mass) ;
-
+//  cout << "-------------------\nFITTING THE TAIL W/ EXP OF POWER LAW\n\n-------------------\n" ;
+//
+//  double start_3 = rightTh_1 ; //+ 0.5 * func_mg_2->GetParameter (2) ;
+//  TF1 * func_mg_3 = new TF1 ("func_mg_3", expOfPowerLaw, 0, 2000, 7) ;
+//  func_mg_3->SetNpx (10000) ;
+//  func_mg_3->SetLineWidth (1) ;
+//  func_mg_3->SetLineColor (kOrange + 1) ;
+//  func_mg_3->SetParName (0, "N") ;
+//  func_mg_3->SetParName (1, "mean") ;
+//  func_mg_3->SetParName (2, "gamma") ;
+//  func_mg_3->SetParameter (0, h_MWW_mg->Integral (start_3, 2 * mass)) ;            // multiplicative scale
+//  func_mg_3->FixParameter (1, mass) ;                        // mean
+//  func_mg_3->SetParameter (2, 1) ; // gaussian sigma
+//
+//  h_MWW_mg->Fit ("func_mg_3", "L", "", start_3, 2 * mass) ;
+//
 
   //PG plotting
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -462,31 +467,56 @@ int macro_signalFit (string filename, double mass)
 
   h_MWW_mg->Draw ("EPsame") ;
   func_mg_1->Draw ("same") ;
-  func_mg_2->Draw ("same") ;
-  func_mg_3->Draw ("same") ;
+//  func_mg_2->Draw ("same") ;
+//  func_mg_3->Draw ("same") ;
   
   
-  char testo[10] ;
-  sprintf (testo, "exp pol. %.2f", func_mg_3->GetParameter (2)) ;
+//  char testo[10] ;
+//  sprintf (testo, "exp pol. %.2f", func_mg_3->GetParameter (2)) ;
 
   leg = new TLegend (0.35,0.26,0.6,0.4) ;
   leg->SetTextFont (42) ;
   leg->SetBorderSize (0) ;
   leg->SetFillStyle (0) ;
   leg->AddEntry (func_mg_1, "double CB", "l") ;
-  leg->AddEntry (func_mg_2, "exp tails", "l") ;
-  leg->AddEntry (func_mg_3, testo, "l") ;
-  leg->AddEntry (l_rightTh_2, "boundaries", "l") ;
+//  leg->AddEntry (func_mg_2, "exp tails", "l") ;
+//  leg->AddEntry (func_mg_3, testo, "l") ;
+//  leg->AddEntry (l_rightTh_2, "boundaries", "l") ;
   leg->Draw () ;
 
   l_rightTh_1->Draw ("same") ;
   l_leftTh_1->Draw ("same") ;
 
-  l_rightTh_2->Draw ("same") ;
-  l_leftTh_2->Draw ("same") ;
+//  l_rightTh_2->Draw ("same") ;
+//  l_leftTh_2->Draw ("same") ;
 
   c4_mg->Update () ;
   c4_mg->Print (TString ("fitSignals_mg") + suffix, "pdf") ;
+
+
+
+  //PG output of the fitting function parameters
+
+  std::ofstream outfile;
+
+  outfile.open ("graphs_sig.txt", std::ios_base::app) ;
+  outfile << "  \n  // ----> MASS " << mass << " ---- ---- ---- \n\n" ;
+
+  outfile << "  // MG signal only parametrisation:\n" ;
+  outfile << "  tg_sig_par0->SetPoint (i, " << mass << ", " << func_mg_1->GetParameter (0) << ") ;\n" ;
+  outfile << "  tg_sig_par1->SetPoint (i, " << mass << ", " << func_mg_1->GetParameter (1) << ") ;\n" ;
+  outfile << "  tg_sig_par2->SetPoint (i, " << mass << ", " << func_mg_1->GetParameter (2) << ") ;\n" ;
+  outfile << "  tg_sig_par3->SetPoint (i, " << mass << ", " << func_mg_1->GetParameter (3) << ") ;\n" ;
+  outfile << "  tg_sig_par4->SetPoint (i, " << mass << ", " << func_mg_1->GetParameter (4) << ") ;\n" ;
+  outfile << "  tg_sig_par5->SetPoint (i, " << mass << ", " << func_mg_1->GetParameter (5) << ") ;\n" ;
+  outfile << "  tg_sig_par6->SetPoint (i, " << mass << ", " << func_mg_1->GetParameter (6) << ") ;\n" ;
+  outfile << "  TF1 * func_sig_" << mass << " = new TF1 (\"func_sig_" << mass << "\",crystalBallLowHigh, 200, 2000, 7) ;\n" ; 
+  outfile << "  double params_sig_" << mass << "[7] = {" << func_mg_1->GetParameter (0) << ", " << func_mg_1->GetParameter (1) << ", " << func_mg_1->GetParameter (2) << ", " << func_mg_1->GetParameter (3) << ", " << func_mg_1->GetParameter (4) << ", " << func_mg_1->GetParameter (5) << ", " << func_mg_1->GetParameter (6)  << " } ;\n" ;
+  outfile << "  func_sig_" << mass << "->SetParameters (params_sig_" << mass << ") ;\n" ; 
+  outfile << "  i++ ;\n" ;
+
+  outfile.close () ;
+
 
   return 0 ;
 

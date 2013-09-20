@@ -441,7 +441,7 @@ int macro_findInterferece (string filename, double mass)
   func_mg_1->SetParameter (3, 1.5) ;                                                   // right junction
 //  func_mg_1->SetParLimits (3, 0.1, 5) ;                                              // right junction
   func_mg_1->SetParameter (4, 2) ;                                                     // right power law order
-  func_mg_1->SetParameter (5, 0.8) ;                                                   // left junction
+  func_mg_1->SetParameter (5, 0.95) ;                                                  // left junction
 //  func_mg_1->SeaParLimits (5, 0.1, 5) ;                                              // left junction
   func_mg_1->SetParameter (6, 2.38) ;                                                  // left power law order
 

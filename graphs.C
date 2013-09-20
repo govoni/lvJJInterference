@@ -113,8 +113,6 @@ int graphs ()
   
   
   
-  
-  
   // ----> MASS 350 ---- ---- ---- 
 
   // interference parametrisation:
@@ -162,13 +160,13 @@ int graphs ()
   // MG signal only parametrisation:
   tg_sig_par0->SetPoint (i, 500, 8.89251e-05) ;
   tg_sig_par1->SetPoint (i, 500, 504.033) ;
-  tg_sig_par2->SetPoint (i, 500, 28.0346) ;
+  tg_sig_par2->SetPoint (i, 500, 28.0345) ;
   tg_sig_par3->SetPoint (i, 500, 0.814726) ;
   tg_sig_par4->SetPoint (i, 500, 2.42493) ;
-  tg_sig_par5->SetPoint (i, 500, 1.01087) ;
-  tg_sig_par6->SetPoint (i, 500, 4.83435) ;
+  tg_sig_par5->SetPoint (i, 500, 1.01086) ;
+  tg_sig_par6->SetPoint (i, 500, 4.83438) ;
   TF1 * func_sig_500 = new TF1 ("func_sig_500",crystalBallLowHigh, 200, 2000, 7) ;
-  double params_sig_500[7] = {8.89251e-05, 504.033, 28.0346, 0.814726, 2.42493, 1.01087, 4.83435 } ;
+  double params_sig_500[7] = {8.89251e-05, 504.033, 28.0345, 0.814726, 2.42493, 1.01086, 4.83438 } ;
   func_sig_500->SetParameters (params_sig_500) ;
   // PG SBI - B  parametrisation:
   tg_sAi_par0->SetPoint (i, 500, 8.25563e-05) ;
@@ -194,15 +192,15 @@ int graphs ()
   double params_650[4] = {-3.65649e-06, 649.011, 0.0008, 23478.6 } ;
   func_650->SetParameters (params_650) ;
   // MG signal only parametrisation:
-  tg_sig_par0->SetPoint (i, 650, 1.87391e-05) ;
+  tg_sig_par0->SetPoint (i, 650, 1.8739e-05) ;
   tg_sig_par1->SetPoint (i, 650, 661.553) ;
-  tg_sig_par2->SetPoint (i, 650, 62.2655) ;
-  tg_sig_par3->SetPoint (i, 650, 0.797603) ;
-  tg_sig_par4->SetPoint (i, 650, 6.13542) ;
-  tg_sig_par5->SetPoint (i, 650, 0.955861) ;
-  tg_sig_par6->SetPoint (i, 650, 15.3988) ;
+  tg_sig_par2->SetPoint (i, 650, 62.2656) ;
+  tg_sig_par3->SetPoint (i, 650, 0.797607) ;
+  tg_sig_par4->SetPoint (i, 650, 6.13536) ;
+  tg_sig_par5->SetPoint (i, 650, 0.955864) ;
+  tg_sig_par6->SetPoint (i, 650, 15.3987) ;
   TF1 * func_sig_650 = new TF1 ("func_sig_650",crystalBallLowHigh, 200, 2000, 7) ;
-  double params_sig_650[7] = {1.87391e-05, 661.553, 62.2655, 0.797603, 6.13542, 0.955861, 15.3988 } ;
+  double params_sig_650[7] = {1.8739e-05, 661.553, 62.2656, 0.797607, 6.13536, 0.955864, 15.3987 } ;
   func_sig_650->SetParameters (params_sig_650) ;
   // PG SBI - B  parametrisation:
   tg_sAi_par0->SetPoint (i, 650, 1.76301e-05) ;
@@ -228,15 +226,15 @@ int graphs ()
   double params_800[4] = {-1.71241e-06, 763.576, 0.0008, 36336.1 } ;
   func_800->SetParameters (params_800) ;
   // MG signal only parametrisation:
-  tg_sig_par0->SetPoint (i, 800, 5.43552e-06) ;
-  tg_sig_par1->SetPoint (i, 800, 806.479) ;
-  tg_sig_par2->SetPoint (i, 800, 108.152) ;
-  tg_sig_par3->SetPoint (i, 800, 1.0251) ;
-  tg_sig_par4->SetPoint (i, 800, 8.15215) ;
-  tg_sig_par5->SetPoint (i, 800, 0.951711) ;
-  tg_sig_par6->SetPoint (i, 800, 141.733) ;
+  tg_sig_par0->SetPoint (i, 800, 5.43797e-06) ;
+  tg_sig_par1->SetPoint (i, 800, 806.433) ;
+  tg_sig_par2->SetPoint (i, 800, 108.112) ;
+  tg_sig_par3->SetPoint (i, 800, 1.02477) ;
+  tg_sig_par4->SetPoint (i, 800, 8.1546) ;
+  tg_sig_par5->SetPoint (i, 800, 0.977263) ;
+  tg_sig_par6->SetPoint (i, 800, 141.627) ;
   TF1 * func_sig_800 = new TF1 ("func_sig_800",crystalBallLowHigh, 200, 2000, 7) ;
-  double params_sig_800[7] = {5.43552e-06, 806.479, 108.152, 1.0251, 8.15215, 0.951711, 141.733 } ;
+  double params_sig_800[7] = {5.43797e-06, 806.433, 108.112, 1.02477, 8.1546, 0.977263, 141.627 } ;
   func_sig_800->SetParameters (params_sig_800) ;
   // PG SBI - B  parametrisation:
   tg_sAi_par0->SetPoint (i, 800, 4.91246e-06) ;
@@ -262,15 +260,15 @@ int graphs ()
   double params_1000[4] = {-7.22506e-07, 817.131, 0.0008, 85380.2 } ;
   func_1000->SetParameters (params_1000) ;
   // MG signal only parametrisation:
-  tg_sig_par0->SetPoint (i, 1000, 1.26711e-06) ;
-  tg_sig_par1->SetPoint (i, 1000, 933.347) ;
-  tg_sig_par2->SetPoint (i, 1000, 224.458) ;
-  tg_sig_par3->SetPoint (i, 1000, 1.30561) ;
-  tg_sig_par4->SetPoint (i, 1000, 92.1374) ;
-  tg_sig_par5->SetPoint (i, 1000, -252354) ;
-  tg_sig_par6->SetPoint (i, 1000, 77.2872) ;
+  tg_sig_par0->SetPoint (i, 1000, 1.26348e-06) ;
+  tg_sig_par1->SetPoint (i, 1000, 934.391) ;
+  tg_sig_par2->SetPoint (i, 1000, 223.367) ;
+  tg_sig_par3->SetPoint (i, 1000, 1.29158) ;
+  tg_sig_par4->SetPoint (i, 1000, 92.2629) ;
+  tg_sig_par5->SetPoint (i, 1000, 1.47231) ;
+  tg_sig_par6->SetPoint (i, 1000, 7.97642) ;
   TF1 * func_sig_1000 = new TF1 ("func_sig_1000",crystalBallLowHigh, 200, 2000, 7) ;
-  double params_sig_1000[7] = {1.26711e-06, 933.347, 224.458, 1.30561, 92.1374, -252354, 77.2872 } ;
+  double params_sig_1000[7] = {1.26348e-06, 934.391, 223.367, 1.29158, 92.2629, 1.47231, 7.97642 } ;
   func_sig_1000->SetParameters (params_sig_1000) ;
   // PG SBI - B  parametrisation:
   tg_sAi_par0->SetPoint (i, 1000, 9.78941e-07) ;
