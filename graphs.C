@@ -401,11 +401,8 @@ int graphs ()
 //  fit_param0->SetLineWidth (1) ;
 //  fit_param0->SetLineColor (kBlue + 1) ;
 
-//  cout << "aho " << fit_param0->Eval (350) << endl ;
-//  fit_param0->Draw ("same") ;
-//  fit_param0->Draw () ;
-
 //  tg_par0->Fit (fit_param0) ;
+
   tg_par0->Draw ("AL*") ; 
 
   cout << "---> INTERF PARAM 1\n" ;
@@ -437,15 +434,83 @@ int graphs ()
 
   //PG PARAMETERS OF THE MADGRAPH SIGNAL
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-  
+
+
+  //PG get the initial params of the first param fit
+  TGraph * log_tg_sig_par0 = new TGraph (5) ;
+  for (int i = 0 ; i < 5 ; ++i) 
+    {
+      double x, y ;
+      tg_sig_par0->GetPoint (i, x, y) ;
+      log_tg_sig_par0->SetPoint (i, x, TMath::Log (y)) ;
+    }
+  TF1 * mypol3 = new TF1 ("mypol3", "[0] + [2] * (x - [1]) + [3] * (x - [1]) * (x - [1]) + [4] * (x - [1]) * (x - [1]) * (x - [1])", 200, 2000) ;
+  cout << "-------------------\nmypol2\n\n-------------------\n" ;
+  log_tg_sig_par0->Fit ("mypol3") ;
+//  TCanvas * tempo_log = new TCanvas ("tempo_log", "tempo_log", 600, 600) ;
+//  log_tg_sig_par0->Draw ("AL*") ;
+
+
+//  TCanvas * tempo = new TCanvas ("tempo", "tempo", 600, 600) ;
+//  tempo->DrawFrame (300, 0.000001, 1100, 0.0012) ;
+//  tempo->SetLogy () ;
+//  tg_sig_par0->Draw ("L*") ; 
+//  cout << "-------------------\nexpo\n\n-------------------\n" ;
+//  tg_sig_par0->Fit ("expo") ;
+//  tg_sig_par0->GetFunction ("expo")->SetLineWidth (1) ;
+//  tg_sig_par0->GetFunction ("expo")->SetLineColor (kBlue + 1) ;
+//  TF1 * expo_1 = new TF1 ("expo_1","TMath::Exp ([0] + [2] * (x - [1]))", 200, 2000) ;
+//  expo_1->SetLineColor (kRed) ;
+//  expo_1->SetLineWidth (1) ;
+//  expo_1->SetParameter (0, tg_sig_par0->GetFunction ("expo")->GetParameter (0)) ;
+//  expo_1->SetParameter (1, 0.) ;
+//  expo_1->SetParameter (2, tg_sig_par0->GetFunction ("expo")->GetParameter (1)) ;
+//  cout << "-------------------\nexpo_1\n\n-------------------\n" ;
+//  tg_sig_par0->Fit (expo_1, "+") ;
+//  TF1 * expo_2 = new TF1 ("expo_2","TMath::Exp ([0] + [2] * (x - [1]) + [3] * (x - [1]) * (x - [1]))", 200, 2000) ;
+//  expo_2->SetLineColor (kViolet + 1) ;
+//  expo_2->SetLineWidth (1) ;
+//  expo_2->SetParameter (0, mypol2->GetParameter (0)) ;
+//  expo_2->SetParameter (1, mypol2->GetParameter (1)) ;
+//  expo_2->SetParameter (2, mypol2->GetParameter (2)) ;
+//  expo_2->SetParameter (3, mypol2->GetParameter (3)) ;
+//  cout << "-------------------\nexpo_2\n\n-------------------\n" ;
+//  tg_sig_par0->Fit (expo_2, "+") ;
+//  TF1 * expo_3 = new TF1 ("expo_3","TMath::Exp ([0] + [2] * (x - [1]) + [3] * (x - [1]) * (x - [1]) + [4] * (x - [1]) * (x - [1]) * (x - [1]))", 200, 2000) ;
+//  expo_3->SetLineColor (kViolet + 1) ;
+//  expo_3->SetLineWidth (1) ;
+//  expo_3->SetParameter (0, mypol3->GetParameter (0)) ;
+//  expo_3->SetParameter (1, mypol3->GetParameter (1)) ;
+//  expo_3->SetParameter (2, mypol3->GetParameter (2)) ;
+//  expo_3->SetParameter (3, mypol3->GetParameter (3)) ;
+//  expo_3->SetParameter (4, mypol3->GetParameter (4)) ;
+//  cout << "-------------------\nexpo_3\n\n-------------------\n" ;
+//  tg_sig_par0->Fit (expo_3, "+") ;
+//  TF1 * powlaw_1 = new TF1 ("powlaw_1","[0] + [1] / (x - [2])", 200, 2000) ;
+//  powlaw_1->SetLineColor (kGreen + 2) ;
+//  powlaw_1->SetLineWidth (1) ;
+//  powlaw_1->SetParameter (0, 0.) ;
+//  powlaw_1->SetParameter (1, 0.05) ;
+//  powlaw_1->SetParameter (2, 300) ;
+//  cout << "-------------------\npowlaw_1\n\n-------------------\n" ;
+//  tg_sig_par0->Fit (powlaw_1, "+") ;
+
+
   TCanvas * c_sig_par = new TCanvas ("c_sig_par", "c_sig_par", 4000, 600) ;
   c_sig_par->Divide (4,2) ;
   i = 0 ;
   cout << "---> SIGNAL PARAM 0\n" ;
   c_sig_par->cd (++i) ; tg_sig_par0->Draw ("AL*") ; 
-  tg_sig_par0->Fit ("expo") ;
-  tg_sig_par0->GetFunction ("expo")->SetLineWidth (1) ;
-  tg_sig_par0->GetFunction ("expo")->SetLineColor (kBlue + 1) ;
+  TF1 * expo_3 = new TF1 ("expo_3","TMath::Exp ([0] + [2] * (x - [1]) + [3] * (x - [1]) * (x - [1]) + [4] * (x - [1]) * (x - [1]) * (x - [1]))", 200, 2000) ;
+  expo_3->SetLineColor (kBlue + 1) ;
+  expo_3->SetLineWidth (1) ;
+  expo_3->SetParameter (0, mypol3->GetParameter (0)) ;
+  expo_3->SetParameter (1, mypol3->GetParameter (1)) ;
+  expo_3->SetParameter (2, mypol3->GetParameter (2)) ;
+  expo_3->SetParameter (3, mypol3->GetParameter (3)) ;
+  expo_3->SetParameter (4, mypol3->GetParameter (4)) ;
+  cout << "-------------------\nexpo_3\n\n-------------------\n" ;
+  tg_sig_par0->Fit (expo_3, "+") ;
   cout << "---> SIGNAL PARAM 1\n" ;
   c_sig_par->cd (++i) ; tg_sig_par1->Draw ("AL*") ; 
   tg_sig_par1->Fit ("pol2") ;
@@ -700,6 +765,14 @@ int graphs ()
   cout << "fit_param3->FixParameter (" << k++ << ", " << fit_param3->GetParameter (1) << ") ;\n" ;
   cout << "fit_param3->FixParameter (" << k++ << ", " << fit_param3->GetParameter (2) << ") ;\n" ;
 
+  cout << "TF1 * expo_3 = new TF1 (\"expo_3\",\"TMath::Exp ([0] + [2] * (x - [1]) + [3] * (x - [1]) * (x - [1]) + [4] * (x - [1]) * (x - [1]) * (x - [1]))\", 200, 2000) ;\n" ;
+  cout << "expo_3->SetLineColor (kBlue + 1) ;\n" ;
+  cout << "expo_3->SetLineWidth (1) ;\n" ;
+  cout << "expo_3->SetParameter (0, " << expo_3->GetParameter (0) << ") ;\n" ;
+  cout << "expo_3->SetParameter (1, " << expo_3->GetParameter (1) << ") ;\n" ;
+  cout << "expo_3->SetParameter (2, " << expo_3->GetParameter (2) << ") ;\n" ;
+  cout << "expo_3->SetParameter (3, " << expo_3->GetParameter (3) << ") ;\n" ;
+  cout << "expo_3->SetParameter (4, " << expo_3->GetParameter (4) << ") ;\n" ;
   
 
 }  
