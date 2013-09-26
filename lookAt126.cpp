@@ -251,6 +251,7 @@ int main (int argc, char ** argv)
       if (dummy > 0) dynamicScale = 1 ;
     }
 
+  cout << "use dynamic scale: " << dynamicScale << endl ;
   double mass = 126 ;
 
   //PG choose the samples
