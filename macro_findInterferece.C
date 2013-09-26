@@ -314,7 +314,7 @@ int macro_findInterferece (string filename, double mass)
   double rangeScale = 1.5 ;
   if (mass > 480) rangeScale = 2 ;
   
-  int scaling = 1 ;
+  int scaling = 0 ;
   
   cout << "rebinning factor: " << reBin << "\n" ;
   cout << "MG bins number before rebinning: " << h_MWW_mg->GetNbinsX () << "\n" ;
@@ -572,10 +572,10 @@ int macro_findInterferece (string filename, double mass)
   TCanvas * c3 = new TCanvas ("c3", "c3") ;
   double ymax = delta->GetBinContent (delta->GetMaximumBin ()) ;
   double ymin = delta->GetBinContent (delta->GetMinimumBin ()) ;
-  if (ymin > 0) ymin *= 0.9 ;
+  if (ymin > 0) ymin *= 0.5 ;
   else          ymin *= 1.5 ;
-  if (ymin < -2 * ymax) ymin = -2 * ymax ;
-  TH1F * c3_frame = (TH1F *) c3->DrawFrame (200, ymin, rangeScale * mass, 1.1 * ymax) ;
+//  if (ymin < -3 * ymax) ymin = -2 * ymax ;
+  TH1F * c3_frame = (TH1F *) c3->DrawFrame (200, ymin, rangeScale * mass, 2 * ymax) ;
   c3_frame->SetTitle (0) ;
   c3_frame->SetStats (0) ;
   c3_frame->GetXaxis ()->SetTitle ("m_{WW} (GeV)") ;
