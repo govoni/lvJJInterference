@@ -36,7 +36,7 @@ struct histos
   histos (TString name, double XS) : m_name (name), m_XS (XS)
     {
       m_h_MWW = new TH1F (TString ("h_MWW_") + name, 
-                          TString ("h_MWW_") + name, 3400., 100., 1800.) ;
+                          TString ("h_MWW_") + name, 100000., 100., 1800.) ;
       m_h_MWW->Sumw2 () ;
       m_h_scale = new TH1F (TString ("h_scale_") + name, 
                             TString ("h_scale_") + name, 100, 0., 1000.) ;
@@ -181,16 +181,43 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
       //PG the scale:
       Histos.m_h_scale->Fill (referenceScale) ;
 
+      //PG apply all the production cuts from phantom to the sample
+      //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
+      
+      if (v_f_leptons.at (0).Pt () < 20) continue ;
+      if (v_f_leptons.at (0).E () < 20) continue ;
+      if (fabs (v_f_leptons.at (0).Eta ()) > 3) continue ;
+      if (fabs (v_f_neutrinos.at (0).Pt ()) < 20) continue ;
+      int cont = 0 ;
+      for (int i = 0 ; i < 4 ; ++i) 
+        if (v_f_quarks.at (i).Pt () > 20 && 
+            v_f_quarks.at (i).E () > 20 && 
+            fabs (v_f_quarks.at (i).Eta ()) < 6.5) cont += 1 ;
+      if (cont < 4) continue ;
+      
+
       pair<int, int> detaIndices = findPairWithLargestDeta (v_f_quarks) ;
       if (v_f_quarks.at (detaIndices.second).Eta () - v_f_quarks.at (detaIndices.first).Eta () < 2) continue ;
       TLorentzVector largestPair = v_f_quarks.at (detaIndices.second) + v_f_quarks.at (detaIndices.first) ;
       if (largestPair.M () < 100) continue ; //PG selection applied in phantom
 
       //PG do I need this cut?! FIXME
-      int cont = 0 ;
+      cont = 0 ;
       for (int iJ = 0 ; iJ < 4 ; ++iJ)
         for (int iJ2 = iJ + 1 ; iJ2 < 4 ; ++iJ2)
-          if (v_f_quarks.at (iJ).DeltaR (v_f_quarks.at (iJ2)) < 0.4) cont = 1 ;
+          {
+            if (v_f_quarks.at (iJ).DeltaR (v_f_quarks.at (iJ2)) < 0.4) 
+              {
+                cont = 1 ;
+                break ;
+              }
+            TLorentzVector thisPair = v_f_quarks.at (iJ) + v_f_quarks.at (iJ2) ;
+            if (thisPair.M () < 30)  
+              {
+                cont = 1 ;
+                break ;
+              }
+          }
       if (cont == 1) continue ;
 
       //PG the first two are the VBF jets, the following ones the W jets
