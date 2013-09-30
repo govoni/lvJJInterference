@@ -36,7 +36,7 @@ struct histos
   histos (TString name, double XS) : m_name (name), m_XS (XS)
     {
       m_h_MWW = new TH1F (TString ("h_MWW_") + name, 
-                          TString ("h_MWW_") + name, 100000., 100., 1800.) ;
+                          TString ("h_MWW_") + name, 300000., 100.5, 1800.5) ;
       m_h_MWW->Sumw2 () ;
       m_h_scale = new TH1F (TString ("h_scale_") + name, 
                             TString ("h_scale_") + name, 100, 0., 1000.) ;
