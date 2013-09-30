@@ -181,7 +181,7 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
       //PG the scale:
       Histos.m_h_scale->Fill (referenceScale) ;
 
-      //PG apply all the production cuts from phantom to the sample
+      //PG apply all the production cuts from phantom and madgraph to the sample
       //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
       
       if (v_f_leptons.at (0).Pt () < 20) continue ;
@@ -219,6 +219,14 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
               }
           }
       if (cont == 1) continue ;
+
+      cont = 0 ;
+      for (int iJ = 0 ; iJ < 4 ; ++iJ)
+        {
+          if (v_f_quarks.at (iJ).DeltaR (v_f_leptons.at (0)) < 0.4) cont = 1 ;
+        }
+      if (cont == 1) continue ;
+
 
       //PG the first two are the VBF jets, the following ones the W jets
       sort (v_f_quarks.rbegin (), v_f_quarks.rend (), ptsort ()) ;  
@@ -288,8 +296,8 @@ int main (int argc, char ** argv)
   string filename_phbkg = "/Users/govoni/data/lvjj_samples/interference/phantom/total.126.lhe" ;
   double XS_phbkg = 0.07756069 * 2 ; // 7.7560687011E-002 // pb the factor 2 accounts for muons, electrons
   string filename_mg = "/Users/govoni/data/lvjj_samples/interference/madgraph/madgraph_mH126.lhe" ;
-  double XS_mg =  0.0077079 * 2 ;
-                    
+  double XS_mg =  0.0088106 * 2 ;
+             
   //PG messages
   
   cout << "\nworking with mass : " << mass << endl ;
