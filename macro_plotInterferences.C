@@ -276,13 +276,13 @@ int macro_plotInterferences ()
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
   TF1 * fit_param1 = new TF1 ("fit_param1", "[0] + [1] * x + [2] * x * x") ;                                        
-  fit_param1->FixParameter (0, -201.868) ;
-  fit_param1->FixParameter (1, 1.83565) ;
-  fit_param1->FixParameter (2, -0.000810224) ;
+  fit_param1->FixParameter (0, -83.4383) ;
+  fit_param1->FixParameter (1, 1.34015) ;
+  fit_param1->FixParameter (2, -0.00029879) ;
   TF1 * fit_param3 = new TF1 ("fit_param3", "[0] + [1] * x + [2] * x * x") ;                                        
-  fit_param3->FixParameter (0, 24345.2) ;
-  fit_param3->FixParameter (1, -123.834) ;
-  fit_param3->FixParameter (2, 0.182752) ;
+  fit_param3->FixParameter (0, 8013.42) ;
+  fit_param3->FixParameter (1, -53.7704) ;
+  fit_param3->FixParameter (2, 0.110502) ;
 
   TCanvas * c_merge = new TCanvas () ;
   bkg = (TH1F *) c_merge->DrawFrame (200, -0.00005, 1500, 0.00005) ;
