@@ -229,7 +229,7 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
 
 
       //PG the first two are the VBF jets, the following ones the W jets
-      sort (v_f_quarks.rbegin (), v_f_quarks.rend (), ptsort ()) ;  
+//      sort (v_f_quarks.rbegin (), v_f_quarks.rend (), ptsort ()) ;  
       
 //      pair<int, int> Wpair (2, 3) ;
       pair<int, int> Wpair = findPairWithWMass (v_f_quarks) ;
