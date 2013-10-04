@@ -72,6 +72,26 @@ Double_t doublePeakModel (Double_t * xx, Double_t * par)
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
+Double_t min (Double_t uno, Double_t due)
+{
+  if (uno < due) return uno ;
+  return due ;
+} 
+
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+Double_t max (Double_t uno, Double_t due)
+{
+  if (uno > due) return uno ;
+  return due ;
+} 
+
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
 Double_t intereferenceOverSignal (Double_t * xx, Double_t * par) 
 {
   if (crystalBallLowHigh (xx, par + 4) < 0.0000001) return 0 ;
@@ -113,52 +133,53 @@ int graphs ()
   
   
   
+  
   // ----> MASS 350 ---- ---- ---- 
 
   // interference parametrisation:
-  tg_par0->SetPoint (i, 350, -3.75686e-05) ;
-  tg_par1->SetPoint (i, 350, 350.889) ;
+  tg_par0->SetPoint (i, 350, -3.71341e-05) ;
+  tg_par1->SetPoint (i, 350, 353.091) ;
   tg_par2->SetPoint (i, 350, 0.0008) ;
-  tg_par3->SetPoint (i, 350, 1057.25) ;
+  tg_par3->SetPoint (i, 350, 1074.59) ;
   TF1 * func_350 = new TF1 ("func_350",doublePeakModel, 200, 2000, 4) ;
-  double params_350[4] = {-3.75686e-05, 350.889, 0.0008, 1057.25 } ;
+  double params_350[4] = {-3.71341e-05, 353.091, 0.0008, 1074.59 } ;
   func_350->SetParameters (params_350) ;
   // MG signal only parametrisation:
-  tg_sig_par0->SetPoint (i, 350, 0.000990502) ;
-  tg_sig_par1->SetPoint (i, 350, 350.346) ;
-  tg_sig_par2->SetPoint (i, 350, 7.64082) ;
-  tg_sig_par3->SetPoint (i, 350, 1.15547) ;
-  tg_sig_par4->SetPoint (i, 350, 1.55098) ;
-  tg_sig_par5->SetPoint (i, 350, 1.26826) ;
-  tg_sig_par6->SetPoint (i, 350, 2.15497) ;
+  tg_sig_par0->SetPoint (i, 350, 0.000952886) ;
+  tg_sig_par1->SetPoint (i, 350, 350.384) ;
+  tg_sig_par2->SetPoint (i, 350, 7.70264) ;
+  tg_sig_par3->SetPoint (i, 350, 1.16314) ;
+  tg_sig_par4->SetPoint (i, 350, 1.53064) ;
+  tg_sig_par5->SetPoint (i, 350, 1.27642) ;
+  tg_sig_par6->SetPoint (i, 350, 2.17316) ;
   TF1 * func_sig_350 = new TF1 ("func_sig_350",crystalBallLowHigh, 200, 2000, 7) ;
-  double params_sig_350[7] = {0.000990502, 350.346, 7.64082, 1.15547, 1.55098, 1.26826, 2.15497 } ;
+  double params_sig_350[7] = {0.000952886, 350.384, 7.70264, 1.16314, 1.53064, 1.27642, 2.17316 } ;
   func_sig_350->SetParameters (params_sig_350) ;
   // PG SBI - B  parametrisation:
-  tg_sAi_par0->SetPoint (i, 350, 0.000984922) ;
-  tg_sAi_par1->SetPoint (i, 350, 349.732) ;
-  tg_sAi_par2->SetPoint (i, 350, 7.29879) ;
-  tg_sAi_par3->SetPoint (i, 350, 1.0354) ;
+  tg_sAi_par0->SetPoint (i, 350, 0.000978532) ;
+  tg_sAi_par1->SetPoint (i, 350, 349.72) ;
+  tg_sAi_par2->SetPoint (i, 350, -7.33274) ;
+  tg_sAi_par3->SetPoint (i, 350, 1.03633) ;
   tg_sAi_par4->SetPoint (i, 350, 3) ;
   tg_sAi_par5->SetPoint (i, 350, 1) ;
   tg_sAi_par6->SetPoint (i, 350, 3) ;
   TF1 * func_sAi_350 = new TF1 ("func_sAi_350",crystalBallLowHigh, 200, 2000, 7) ;
-  double params_sAi_350[7] = {0.000984922, 349.732, 7.29879, 1.0354, 3, 1, 3 } ;
+  double params_sAi_350[7] = {0.000978532, 349.72, -7.33274, 1.03633, 3, 1, 3 } ;
   func_sAi_350->SetParameters (params_sAi_350) ;
   i++ ;
   
   // ----> MASS 500 ---- ---- ---- 
 
   // interference parametrisation:
-  tg_par0->SetPoint (i, 500, -1.01505e-05) ;
-  tg_par1->SetPoint (i, 500, 494.806) ;
+  tg_par0->SetPoint (i, 500, -9.23198e-06) ;
+  tg_par1->SetPoint (i, 500, 504.435) ;
   tg_par2->SetPoint (i, 500, 0.0008) ;
-  tg_par3->SetPoint (i, 500, 11820.7) ;
+  tg_par3->SetPoint (i, 500, 11291.6) ;
   TF1 * func_500 = new TF1 ("func_500",doublePeakModel, 200, 2000, 4) ;
-  double params_500[4] = {-1.01505e-05, 494.806, 0.0008, 11820.7 } ;
+  double params_500[4] = {-9.23198e-06, 504.435, 0.0008, 11291.6 } ;
   func_500->SetParameters (params_500) ;
   // MG signal only parametrisation:
-  tg_sig_par0->SetPoint (i, 500, 8.89251e-05) ;
+  tg_sig_par0->SetPoint (i, 500, 8.37317e-05) ;
   tg_sig_par1->SetPoint (i, 500, 504.033) ;
   tg_sig_par2->SetPoint (i, 500, 28.0345) ;
   tg_sig_par3->SetPoint (i, 500, 0.814726) ;
@@ -166,120 +187,120 @@ int graphs ()
   tg_sig_par5->SetPoint (i, 500, 1.01086) ;
   tg_sig_par6->SetPoint (i, 500, 4.83438) ;
   TF1 * func_sig_500 = new TF1 ("func_sig_500",crystalBallLowHigh, 200, 2000, 7) ;
-  double params_sig_500[7] = {8.89251e-05, 504.033, 28.0345, 0.814726, 2.42493, 1.01086, 4.83438 } ;
+  double params_sig_500[7] = {8.37317e-05, 504.033, 28.0345, 0.814726, 2.42493, 1.01086, 4.83438 } ;
   func_sig_500->SetParameters (params_sig_500) ;
   // PG SBI - B  parametrisation:
-  tg_sAi_par0->SetPoint (i, 500, 8.25563e-05) ;
-  tg_sAi_par1->SetPoint (i, 500, 498.203) ;
-  tg_sAi_par2->SetPoint (i, 500, -29.9421) ;
-  tg_sAi_par3->SetPoint (i, 500, 1.22454) ;
+  tg_sAi_par0->SetPoint (i, 500, 8.21694e-05) ;
+  tg_sAi_par1->SetPoint (i, 500, 498.063) ;
+  tg_sAi_par2->SetPoint (i, 500, -30.2295) ;
+  tg_sAi_par3->SetPoint (i, 500, 1.22531) ;
   tg_sAi_par4->SetPoint (i, 500, 3) ;
   tg_sAi_par5->SetPoint (i, 500, 1) ;
   tg_sAi_par6->SetPoint (i, 500, 3) ;
   TF1 * func_sAi_500 = new TF1 ("func_sAi_500",crystalBallLowHigh, 200, 2000, 7) ;
-  double params_sAi_500[7] = {8.25563e-05, 498.203, -29.9421, 1.22454, 3, 1, 3 } ;
+  double params_sAi_500[7] = {8.21694e-05, 498.063, -30.2295, 1.22531, 3, 1, 3 } ;
   func_sAi_500->SetParameters (params_sAi_500) ;
   i++ ;
   
   // ----> MASS 650 ---- ---- ---- 
 
   // interference parametrisation:
-  tg_par0->SetPoint (i, 650, -3.65649e-06) ;
-  tg_par1->SetPoint (i, 650, 649.011) ;
+  tg_par0->SetPoint (i, 650, -3.42623e-06) ;
+  tg_par1->SetPoint (i, 650, 660.125) ;
   tg_par2->SetPoint (i, 650, 0.0008) ;
-  tg_par3->SetPoint (i, 650, 23478.6) ;
+  tg_par3->SetPoint (i, 650, 21723.7) ;
   TF1 * func_650 = new TF1 ("func_650",doublePeakModel, 200, 2000, 4) ;
-  double params_650[4] = {-3.65649e-06, 649.011, 0.0008, 23478.6 } ;
+  double params_650[4] = {-3.42623e-06, 660.125, 0.0008, 21723.7 } ;
   func_650->SetParameters (params_650) ;
   // MG signal only parametrisation:
-  tg_sig_par0->SetPoint (i, 650, 1.8739e-05) ;
-  tg_sig_par1->SetPoint (i, 650, 661.553) ;
-  tg_sig_par2->SetPoint (i, 650, 62.2656) ;
-  tg_sig_par3->SetPoint (i, 650, 0.797607) ;
-  tg_sig_par4->SetPoint (i, 650, 6.13536) ;
-  tg_sig_par5->SetPoint (i, 650, 0.955864) ;
-  tg_sig_par6->SetPoint (i, 650, 15.3987) ;
+  tg_sig_par0->SetPoint (i, 650, 1.76845e-05) ;
+  tg_sig_par1->SetPoint (i, 650, 661.821) ;
+  tg_sig_par2->SetPoint (i, 650, 62.0886) ;
+  tg_sig_par3->SetPoint (i, 650, 0.792082) ;
+  tg_sig_par4->SetPoint (i, 650, 6.19973) ;
+  tg_sig_par5->SetPoint (i, 650, 0.954558) ;
+  tg_sig_par6->SetPoint (i, 650, 16.8303) ;
   TF1 * func_sig_650 = new TF1 ("func_sig_650",crystalBallLowHigh, 200, 2000, 7) ;
-  double params_sig_650[7] = {1.8739e-05, 661.553, 62.2656, 0.797607, 6.13536, 0.955864, 15.3987 } ;
+  double params_sig_650[7] = {1.76845e-05, 661.821, 62.0886, 0.792082, 6.19973, 0.954558, 16.8303 } ;
   func_sig_650->SetParameters (params_sig_650) ;
   // PG SBI - B  parametrisation:
-  tg_sAi_par0->SetPoint (i, 650, 1.76301e-05) ;
-  tg_sAi_par1->SetPoint (i, 650, 642.004) ;
-  tg_sAi_par2->SetPoint (i, 650, -65.4949) ;
-  tg_sAi_par3->SetPoint (i, 650, 1.67731) ;
+  tg_sAi_par0->SetPoint (i, 650, 1.75996e-05) ;
+  tg_sAi_par1->SetPoint (i, 650, 641.578) ;
+  tg_sAi_par2->SetPoint (i, 650, -65.6889) ;
+  tg_sAi_par3->SetPoint (i, 650, 1.6513) ;
   tg_sAi_par4->SetPoint (i, 650, 3) ;
   tg_sAi_par5->SetPoint (i, 650, 1) ;
   tg_sAi_par6->SetPoint (i, 650, 3) ;
   TF1 * func_sAi_650 = new TF1 ("func_sAi_650",crystalBallLowHigh, 200, 2000, 7) ;
-  double params_sAi_650[7] = {1.76301e-05, 642.004, -65.4949, 1.67731, 3, 1, 3 } ;
+  double params_sAi_650[7] = {1.75996e-05, 641.578, -65.6889, 1.6513, 3, 1, 3 } ;
   func_sAi_650->SetParameters (params_sAi_650) ;
   i++ ;
   
   // ----> MASS 800 ---- ---- ---- 
 
   // interference parametrisation:
-  tg_par0->SetPoint (i, 800, -1.71241e-06) ;
-  tg_par1->SetPoint (i, 800, 763.576) ;
+  tg_par0->SetPoint (i, 800, -1.21044e-06) ;
+  tg_par1->SetPoint (i, 800, 805.215) ;
   tg_par2->SetPoint (i, 800, 0.0008) ;
-  tg_par3->SetPoint (i, 800, 36336.1) ;
+  tg_par3->SetPoint (i, 800, 31300.9) ;
   TF1 * func_800 = new TF1 ("func_800",doublePeakModel, 200, 2000, 4) ;
-  double params_800[4] = {-1.71241e-06, 763.576, 0.0008, 36336.1 } ;
+  double params_800[4] = {-1.21044e-06, 805.215, 0.0008, 31300.9 } ;
   func_800->SetParameters (params_800) ;
   // MG signal only parametrisation:
-  tg_sig_par0->SetPoint (i, 800, 5.43797e-06) ;
+  tg_sig_par0->SetPoint (i, 800, 4.2978e-06) ;
   tg_sig_par1->SetPoint (i, 800, 806.433) ;
   tg_sig_par2->SetPoint (i, 800, 108.112) ;
   tg_sig_par3->SetPoint (i, 800, 1.02477) ;
   tg_sig_par4->SetPoint (i, 800, 8.1546) ;
   tg_sig_par5->SetPoint (i, 800, 0.977263) ;
-  tg_sig_par6->SetPoint (i, 800, 141.627) ;
+  tg_sig_par6->SetPoint (i, 800, 141.628) ;
   TF1 * func_sig_800 = new TF1 ("func_sig_800",crystalBallLowHigh, 200, 2000, 7) ;
-  double params_sig_800[7] = {5.43797e-06, 806.433, 108.112, 1.02477, 8.1546, 0.977263, 141.627 } ;
+  double params_sig_800[7] = {4.2978e-06, 806.433, 108.112, 1.02477, 8.1546, 0.977263, 141.628 } ;
   func_sig_800->SetParameters (params_sig_800) ;
   // PG SBI - B  parametrisation:
-  tg_sAi_par0->SetPoint (i, 800, 4.91246e-06) ;
-  tg_sAi_par1->SetPoint (i, 800, 744.754) ;
-  tg_sAi_par2->SetPoint (i, 800, -115.026) ;
-  tg_sAi_par3->SetPoint (i, 800, 4.92705) ;
+  tg_sAi_par0->SetPoint (i, 800, 4.90625e-06) ;
+  tg_sAi_par1->SetPoint (i, 800, 743.86) ;
+  tg_sAi_par2->SetPoint (i, 800, -116.156) ;
+  tg_sAi_par3->SetPoint (i, 800, 4.85572) ;
   tg_sAi_par4->SetPoint (i, 800, 3) ;
   tg_sAi_par5->SetPoint (i, 800, 1) ;
   tg_sAi_par6->SetPoint (i, 800, 3) ;
   TF1 * func_sAi_800 = new TF1 ("func_sAi_800",crystalBallLowHigh, 200, 2000, 7) ;
-  double params_sAi_800[7] = {4.91246e-06, 744.754, -115.026, 4.92705, 3, 1, 3 } ;
+  double params_sAi_800[7] = {4.90625e-06, 743.86, -116.156, 4.85572, 3, 1, 3 } ;
   func_sAi_800->SetParameters (params_sAi_800) ;
   i++ ;
   
   // ----> MASS 1000 ---- ---- ---- 
 
   // interference parametrisation:
-  tg_par0->SetPoint (i, 1000, -7.22506e-07) ;
-  tg_par1->SetPoint (i, 1000, 817.131) ;
+  tg_par0->SetPoint (i, 1000, -1.97628e-07) ;
+  tg_par1->SetPoint (i, 1000, 954.874) ;
   tg_par2->SetPoint (i, 1000, 0.0008) ;
-  tg_par3->SetPoint (i, 1000, 85380.2) ;
+  tg_par3->SetPoint (i, 1000, 66307) ;
   TF1 * func_1000 = new TF1 ("func_1000",doublePeakModel, 200, 2000, 4) ;
-  double params_1000[4] = {-7.22506e-07, 817.131, 0.0008, 85380.2 } ;
+  double params_1000[4] = {-1.97628e-07, 954.874, 0.0008, 66307 } ;
   func_1000->SetParameters (params_1000) ;
   // MG signal only parametrisation:
-  tg_sig_par0->SetPoint (i, 1000, 1.26348e-06) ;
-  tg_sig_par1->SetPoint (i, 1000, 934.391) ;
-  tg_sig_par2->SetPoint (i, 1000, 223.367) ;
-  tg_sig_par3->SetPoint (i, 1000, 1.29158) ;
-  tg_sig_par4->SetPoint (i, 1000, 92.2629) ;
-  tg_sig_par5->SetPoint (i, 1000, 1.47231) ;
-  tg_sig_par6->SetPoint (i, 1000, 7.97642) ;
+  tg_sig_par0->SetPoint (i, 1000, 5.40097e-07) ;
+  tg_sig_par1->SetPoint (i, 1000, 934.543) ;
+  tg_sig_par2->SetPoint (i, 1000, 223.329) ;
+  tg_sig_par3->SetPoint (i, 1000, 1.29696) ;
+  tg_sig_par4->SetPoint (i, 1000, 94.1604) ;
+  tg_sig_par5->SetPoint (i, 1000, -252619) ;
+  tg_sig_par6->SetPoint (i, 1000, 75.0455) ;
   TF1 * func_sig_1000 = new TF1 ("func_sig_1000",crystalBallLowHigh, 200, 2000, 7) ;
-  double params_sig_1000[7] = {1.26348e-06, 934.391, 223.367, 1.29158, 92.2629, 1.47231, 7.97642 } ;
+  double params_sig_1000[7] = {5.40097e-07, 934.543, 223.329, 1.29696, 94.1604, -252619, 75.0455 } ;
   func_sig_1000->SetParameters (params_sig_1000) ;
   // PG SBI - B  parametrisation:
-  tg_sAi_par0->SetPoint (i, 1000, 9.78941e-07) ;
-  tg_sAi_par1->SetPoint (i, 1000, 753.335) ;
-  tg_sAi_par2->SetPoint (i, 1000, -222.197) ;
-  tg_sAi_par3->SetPoint (i, 1000, 4.01578) ;
+  tg_sAi_par0->SetPoint (i, 1000, 9.86385e-07) ;
+  tg_sAi_par1->SetPoint (i, 1000, 745.657) ;
+  tg_sAi_par2->SetPoint (i, 1000, -226.263) ;
+  tg_sAi_par3->SetPoint (i, 1000, 4.94692) ;
   tg_sAi_par4->SetPoint (i, 1000, 3) ;
   tg_sAi_par5->SetPoint (i, 1000, 1) ;
   tg_sAi_par6->SetPoint (i, 1000, 3) ;
   TF1 * func_sAi_1000 = new TF1 ("func_sAi_1000",crystalBallLowHigh, 200, 2000, 7) ;
-  double params_sAi_1000[7] = {9.78941e-07, 753.335, -222.197, 4.01578, 3, 1, 3 } ;
+  double params_sAi_1000[7] = {9.86385e-07, 745.657, -226.263, 4.94692, 3, 1, 3 } ;
   func_sAi_1000->SetParameters (params_sAi_1000) ;
   i++ ;
 
@@ -573,7 +594,7 @@ int graphs ()
   f_IOS_350->SetParameters (IOS_350_pars) ;
 
   c_results->cd (i) ;
-  bkg = (TH1F *) gPad->DrawFrame (200, 1.1 * func_350->GetMinimum (), rangeScale * mass, 1.1 * func_sig_350->GetMaximum ()) ;
+  bkg = (TH1F *) gPad->DrawFrame (200, 1.1 * func_350->GetMinimum (), rangeScale * mass, 1.1 * max (func_sig_350->GetMaximum (), func_sAi_350->GetMaximum ())) ;
   bkg->GetXaxis ()->SetTitle ("m_{WW}") ;
   func_sig_350->SetLineWidth (1) ;
   func_sig_350->SetNpx (10000) ;
@@ -606,7 +627,7 @@ int graphs ()
   f_IOS_500->SetParameters (IOS_500_pars) ;
 
   c_results->cd (i) ;
-  bkg = (TH1F *) gPad->DrawFrame (200, 1.1 * func_500->GetMinimum (), rangeScale * mass, 1.1 * func_sig_500->GetMaximum ()) ;
+  bkg = (TH1F *) gPad->DrawFrame (200, 1.1 * func_500->GetMinimum (), rangeScale * mass, 1.1 * max (func_sig_500->GetMaximum (), func_sAi_500->GetMaximum ())) ;
   bkg->GetXaxis ()->SetTitle ("m_{WW}") ;
   func_sig_500->SetLineWidth (1) ;
   func_sig_500->SetNpx (10000) ;
@@ -639,7 +660,7 @@ int graphs ()
   f_IOS_650->SetParameters (IOS_650_pars) ;
 
   c_results->cd (i) ;
-  bkg = (TH1F *) gPad->DrawFrame (200, 1.1 * func_650->GetMinimum (), rangeScale * mass, 1.1 * func_sig_650->GetMaximum ()) ;
+  bkg = (TH1F *) gPad->DrawFrame (200, 1.1 * func_650->GetMinimum (), rangeScale * mass, 1.1 * max (func_sig_650->GetMaximum (), func_sAi_650->GetMaximum ())) ;
   bkg->GetXaxis ()->SetTitle ("m_{WW}") ;
   func_sig_650->SetLineWidth (1) ;
   func_sig_650->SetNpx (10000) ;
@@ -672,7 +693,7 @@ int graphs ()
   f_IOS_800->SetParameters (IOS_800_pars) ;
 
   c_results->cd (i) ;
-  bkg = (TH1F *) gPad->DrawFrame (200, 1.1 * func_800->GetMinimum (), rangeScale * mass, 1.1 * func_sig_800->GetMaximum ()) ;
+  bkg = (TH1F *) gPad->DrawFrame (200, 1.1 * func_800->GetMinimum (), rangeScale * mass, 1.1 * max (func_sig_800->GetMaximum (), func_sAi_800->GetMaximum ())) ;
   bkg->GetXaxis ()->SetTitle ("m_{WW}") ;
   func_sig_800->SetLineWidth (1) ;
   func_sig_800->SetNpx (10000) ;
@@ -705,7 +726,7 @@ int graphs ()
   f_IOS_1000->SetParameters (IOS_1000_pars) ;
 
   c_results->cd (i) ;
-  bkg = (TH1F *) gPad->DrawFrame (200, 1.1 * func_1000->GetMinimum (), rangeScale * mass, 1.1 * func_sig_1000->GetMaximum ()) ;
+  bkg = (TH1F *) gPad->DrawFrame (200, 1.1 * func_1000->GetMinimum (), rangeScale * mass, 1.1 * max (func_sig_1000->GetMaximum (), func_sAi_1000->GetMaximum ())) ;
   bkg->GetXaxis ()->SetTitle ("m_{WW}") ;
   func_sig_1000->SetLineWidth (1) ;
   func_sig_1000->SetNpx (10000) ;
