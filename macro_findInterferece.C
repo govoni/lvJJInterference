@@ -516,7 +516,7 @@ int macro_findInterferece (string filename, double mass)
 
   func_ph_1->SetParameter (0, diff->Integral ()) ;       // multiplicative scale
   func_ph_1->SetParameter (1, mass) ;                    // mean
-  func_ph_1->SetParameter (2, gauss->GetParameter (2)) ; // gaussian sigma
+  func_ph_1->SetParameter (2, 2 * gauss->GetParameter (2)) ; // gaussian sigma
 //  func_ph_1->SetParLimits (2, 0.1 * gauss->GetParameter (2), 20 * gauss->GetParameter (2)) ;
   func_ph_1->SetParameter (3, 1) ;                       // right junction
   func_ph_1->SetParLimits (3, 0.1, 5) ;                  // right junction
@@ -574,7 +574,7 @@ int macro_findInterferece (string filename, double mass)
   double ymin = delta->GetBinContent (delta->GetMinimumBin ()) ;
   if (ymin > 0) ymin *= 0.5 ;
   else          ymin *= 1.5 ;
-//  if (ymin < -3 * ymax) ymin = -2 * ymax ;
+  if (mass > 800 && ymin < -3 * ymax) ymin = -2 * ymax ;
   TH1F * c3_frame = (TH1F *) c3->DrawFrame (200, ymin, rangeScale * mass, 2 * ymax) ;
   c3_frame->SetTitle (0) ;
   c3_frame->SetStats (0) ;
