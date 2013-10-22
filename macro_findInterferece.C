@@ -690,6 +690,8 @@ int macro_findInterferece (string filename, double mass)
   outfile << "  i++ ;\n" ;
 
   outfile.close () ;
+  
+  cout << "scaling applied: " << scaling << endl ;
 
   return 0 ;
 
