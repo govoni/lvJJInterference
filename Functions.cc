@@ -303,9 +303,9 @@ double crystalBallLowHigh (double* x, double* par)
   //[0] = N
   //[1] = mean
   //[2] = sigma
-  //[3] = alpha
+  //[3] = alpha on the right-hand side
   //[4] = n
-  //[5] = alpha2
+  //[5] = alpha2 on the left-hand side
   //[6] = n2
   
   double xx     = x[0];

@@ -551,10 +551,16 @@ int macro_findInterferece (string filename, double mass)
   c4_ph_frame->GetXaxis ()->SetTitle ("m_{WW} (GeV)") ;
   diff->Draw ("EPsame") ;
 
-  double rightTh_ph = fabs (func_ph_1->GetParameter (3)) * func_ph_1->GetParameter (2) + func_ph_1->GetParameter (1) ;
+  cout << "SIGMA: " << func_ph_1->GetParameter (2) << endl ;
+  double rightTh_ph = fabs (func_ph_1->GetParameter (3)) * fabs (func_ph_1->GetParameter (2)) + func_ph_1->GetParameter (1) ;
   cout << "PH RIGHT THRESHOLD " << rightTh_ph << endl ;
-  double leftTh_ph  = -1 * fabs (func_ph_1->GetParameter (5)) * func_ph_1->GetParameter (2) + func_ph_1->GetParameter (1) ;
+  double leftTh_ph  = -1 * fabs (func_ph_1->GetParameter (5)) * fabs (func_ph_1->GetParameter (2)) + func_ph_1->GetParameter (1) ;
   cout << "PH LEFT THRESHOLD " << leftTh_ph << endl ;
+
+  double rightSigma_ph = fabs (func_ph_1->GetParameter (2)) + func_ph_1->GetParameter (1) ;
+  TLine * l_rightSigma_ph = new TLine (rightSigma_ph, 0.9 * ymin, rightSigma_ph, 1.1 * ymax) ;
+  l_rightSigma_ph->SetLineColor (kGray + 2) ;
+  l_rightSigma_ph->Draw ("same") ;
 
   TLine * l_rightTh_ph = new TLine (rightTh_ph, 0.9 * ymin, rightTh_ph, 1.1 * ymax) ;
   l_rightTh_ph->SetLineColor (kRed) ;
