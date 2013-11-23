@@ -10,7 +10,7 @@
 
 #include "TH1.h"
 #include "TFile.h"
-#include "TLorentzVector.h"
+//#include "TLorentzVector.h"
 // CINT does not understand some files included by LorentzVector
 #include "Math/Vector3D.h"
 #include "Math/Vector4D.h"
@@ -24,11 +24,51 @@ using namespace std ;
 typedef LorentzVector<ROOT::Math::PxPyPzE4D<double> > lorentzVector ;
 
 
-struct ptsort: public std::binary_function<TLorentzVector, TLorentzVector, bool>
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+template <class TLV>
+float deltaPhi (const TLV & first, const TLV & second)
 {
-  bool operator () (const TLorentzVector & x, const TLorentzVector & y)
+  float deltaphi = fabs (first.Phi () - second.Phi ()) ;
+  if (deltaphi > 6.283185308) deltaphi -= 6.283185308 ;
+  if (deltaphi > 3.141592654) deltaphi = 6.283185308 - deltaphi ;
+  return deltaphi ;
+}
+
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+template <class TLV>
+float deltaR2 (const TLV & first, const TLV & second)
+{
+  float deltaR2 = deltaPhi<TLV> (first, second) ;
+  deltaR2 *= deltaR2 ;
+  deltaR2 += (first.Eta () - second.Eta ()) * (first.Eta () - second.Eta ()) ;
+  return deltaR2 ;
+}
+
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+template <class TLV>
+float deltaR (const TLV & first, const TLV & second)
+{
+  return sqrt (deltaR2<TLV> (first, second)) ;
+}
+
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+template <class TLV>
+struct ptsort: public std::binary_function<TLV, TLV, bool>
+{
+  bool operator () (const TLV & x, const TLV & y)
     {
-      return  (x.Perp () < y.Perp () ) ;
+      return  (x.Perp2 () < y.Perp2 () ) ;
     }
 } ;
 
@@ -36,9 +76,10 @@ struct ptsort: public std::binary_function<TLorentzVector, TLorentzVector, bool>
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
-struct etasort: public std::binary_function<TLorentzVector, TLorentzVector, bool>
+template <class TLV>
+struct etasort: public std::binary_function<TLV, TLV, bool>
 {
-  bool operator () (const TLorentzVector & x, const TLorentzVector & y)
+  bool operator () (const TLV & x, const TLV & y)
     {
       return  (x.Eta () < y.Eta () ) ;
     }
@@ -48,10 +89,11 @@ struct etasort: public std::binary_function<TLorentzVector, TLorentzVector, bool
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
-pair<int, int> findPairWithLargestDeta (const vector<TLorentzVector> & v_f_quarks)
+template <class TLV>
+pair<int, int> findPairWithLargestDeta (const vector<TLV> & v_f_quarks)
 {
-  int minimum = min_element (v_f_quarks.begin (), v_f_quarks.end (), etasort ()) - v_f_quarks.begin () ;
-  int maximum = max_element (v_f_quarks.begin (), v_f_quarks.end (), etasort ()) - v_f_quarks.begin () ;
+  int minimum = min_element (v_f_quarks.begin (), v_f_quarks.end (), etasort<TLV> ()) - v_f_quarks.begin () ;
+  int maximum = max_element (v_f_quarks.begin (), v_f_quarks.end (), etasort<TLV> ()) - v_f_quarks.begin () ;
   return pair<int, int> (minimum, maximum) ;
   
 }
@@ -60,7 +102,8 @@ pair<int, int> findPairWithLargestDeta (const vector<TLorentzVector> & v_f_quark
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
-pair<int, int> findPairWithWMass (const vector<TLorentzVector> & v_f_quarks)
+template <class TLV>
+pair<int, int> findPairWithWMass (const vector<TLV> & v_f_quarks)
 {
   double ref_deltaM = 100000. ;
   int one = 0 ;
@@ -110,17 +153,17 @@ int splitString (vector<string>& fields, const string & work, char delim, int re
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
-TLorentzVector buildP (const LHEF::HEPEUP & event, int iPart)
-{
-  TLorentzVector dummy ;
-  dummy.SetPxPyPzE (
-      event.PUP.at (iPart).at (0), // px
-      event.PUP.at (iPart).at (1), // py
-      event.PUP.at (iPart).at (2), // pz
-      event.PUP.at (iPart).at (3) // E
-    ) ;
-  return dummy ;  
-}
+//TLorentzVector buildP (const LHEF::HEPEUP & event, int iPart)
+//{
+//  TLorentzVector dummy ;
+//  dummy.SetPxPyPzE (
+//      event.PUP.at (iPart).at (0), // px
+//      event.PUP.at (iPart).at (1), // py
+//      event.PUP.at (iPart).at (2), // pz
+//      event.PUP.at (iPart).at (3) // E
+//    ) ;
+//  return dummy ;  
+//}
 
 
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----

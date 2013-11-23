@@ -15,7 +15,7 @@
 
 #include "TH1.h"
 #include "TFile.h"
-#include "TLorentzVector.h"
+// #include "TLorentzVector.h"
 // CINT does not understand some files included by LorentzVector
 #include "Math/Vector3D.h"
 #include "Math/Vector4D.h"
@@ -88,10 +88,10 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
 
       if (events % 10000 == 0) cout << "reading " << events << " event" << endl ;
           
-      vector<TLorentzVector> v_f_Ws ;
-      vector<TLorentzVector> v_f_quarks ;
-      vector<TLorentzVector> v_f_leptons ;
-      vector<TLorentzVector> v_f_neutrinos ;
+      vector<lorentzVector> v_f_Ws ;
+      vector<lorentzVector> v_f_quarks ;
+      vector<lorentzVector> v_f_leptons ;
+      vector<lorentzVector> v_f_neutrinos ;
       
       double x[2] = {0., 0.} ;
       int flavour[2] = {0, 0} ;
@@ -99,7 +99,7 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
       // loop over particles in the event
       for (int iPart = 0 ; iPart < reader.hepeup.IDUP.size (); ++iPart) 
         {
-          TLorentzVector dummy = buildP (reader.hepeup, iPart) ;
+          lorentzVector dummy = buildLP (reader.hepeup, iPart) ;
 
            // incoming particles        
            if (reader.hepeup.ISTUP.at (iPart) == -1) 
@@ -184,7 +184,7 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
       
       pair<int, int> detaIndices = findPairWithLargestDeta (v_f_quarks) ;
       if (v_f_quarks.at (detaIndices.second).Eta () - v_f_quarks.at (detaIndices.first).Eta () < 2) continue ;
-      TLorentzVector largestPair = v_f_quarks.at (detaIndices.second) + v_f_quarks.at (detaIndices.first) ;
+      lorentzVector largestPair = v_f_quarks.at (detaIndices.second) + v_f_quarks.at (detaIndices.first) ;
       if (largestPair.M () < 100) continue ; //PG selection applied in phantom
 
       cont = 0 ;
@@ -196,7 +196,7 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
 //                cont = 1 ;
 //                break ;
 //              }
-            TLorentzVector thisPair = v_f_quarks.at (iJ) + v_f_quarks.at (iJ2) ;
+            lorentzVector thisPair = v_f_quarks.at (iJ) + v_f_quarks.at (iJ2) ;
             if (thisPair.M () < 30)  
               {
                 cont = 1 ;
@@ -208,7 +208,7 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
       cont = 0 ;
       for (int iJ = 0 ; iJ < 4 ; ++iJ)
         {
-          if (v_f_quarks.at (iJ).DeltaR (v_f_leptons.at (0)) < 0.4) cont = 1 ;
+          if (deltaR2<lorentzVector> (v_f_quarks.at (iJ), v_f_leptons.at (0)) < 0.16) cont = 1 ;
         }
       if (cont == 1) continue ;
 
@@ -223,7 +223,7 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
           cout << "warning, wrong quarks in W determination\n" ;
         }
 
-      TLorentzVector total = (v_f_leptons.at (0) + v_f_neutrinos.at (0)) + 
+      lorentzVector total = (v_f_leptons.at (0) + v_f_neutrinos.at (0)) + 
                              (v_f_quarks.at (Wpair.first) + v_f_quarks.at (Wpair.second)) ;
 
       //PG the scale:
@@ -253,17 +253,17 @@ struct inputInfo
 {
   float mass ;
   string mg_file ;
-  string mg_xs ;
+  double mg_xs ;
   string ph_file ;
-  string ph_xs ;
+  double ph_xs ;
   void print ()
     {
       cout << "----------------------------\n" ;
-      cout << "mass    : " mass ;
-      cout << "mg_file : " mg_file ;
-      cout << "mg_xs   : " mg_xs ;
-      cout << "ph_file : " ph_file ;
-      cout << "ph_xs   : " ph_xs ;
+      cout << "mass    : " << mass ;
+      cout << "mg_file : " << mg_file ;
+      cout << "mg_xs   : " << mg_xs ;
+      cout << "ph_file : " << ph_file ;
+      cout << "ph_xs   : " << ph_xs ;
       cout << "----------------------------\n" ;
     }
 } ;
@@ -285,7 +285,7 @@ int main (int argc, char ** argv)
 
   if (argc < 3) 
     {
-      cout << "usage " argv[0] << " mass datafile [events]" << endl ;
+      cout << "usage " << argv[0] << " mass datafile [events]" << endl ;
       exit (1) ;
     }
 
@@ -327,7 +327,7 @@ int main (int argc, char ** argv)
   //PG choose the samples
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ----
 
-  string filename_phbkg = iInfo[0].ph_file ;
+  string filename_phbkg = iInfo[0].ph_file ;
   double XS_phbkg = iInfo[0].ph_xs ;
 
   string filename_mg = "" ;
