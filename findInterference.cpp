@@ -1,4 +1,4 @@
-  / c++ -o findInterference `root-config --glibs --cflags` `lhapdf-config --cppflags  --ldflags` -lm findInterference.cpp
+// c++ -o findInterference `root-config --glibs --cflags` `lhapdf-config --cppflags  --ldflags` -lm findInterference.cpp
 // c++ -o findInterference `root-config --glibs --cflags` -I/usr/local/include -L/usr/local/lib -lLHAPDF -lm findInterference.cpp
 
 
