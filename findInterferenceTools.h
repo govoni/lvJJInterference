@@ -7,6 +7,7 @@
 #include <iterator>
 #include <cstdlib>
 #include <cassert>
+#include <algorithm>
 
 #include "TH1.h"
 #include "TFile.h"
