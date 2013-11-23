@@ -1,4 +1,6 @@
-// c++ -o findInterference `root-config --glibs --cflags` `lhapdf-config --cppflags  --ldflags` -lm findInterference.cpp
+  / c++ -o findInterference `root-config --glibs --cflags` `lhapdf-config --cppflags  --ldflags` -lm findInterference.cpp
+// c++ -o findInterference `root-config --glibs --cflags` -I/usr/local/include -L/usr/local/lib -lLHAPDF -lm findInterference.cpp
+
 
 #include "LHEF.h"
 #include <iomanip>
@@ -9,6 +11,7 @@
 #include <iterator>
 #include <cstdlib>
 #include <cassert>
+#include <fstream>
 
 #include "TH1.h"
 #include "TFile.h"
@@ -17,6 +20,7 @@
 #include "Math/Vector3D.h"
 #include "Math/Vector4D.h"
 
+//PG #include "LHAPDF.h"
 #include "LHAPDF/LHAPDF.h"
 
 
@@ -183,16 +187,15 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
       TLorentzVector largestPair = v_f_quarks.at (detaIndices.second) + v_f_quarks.at (detaIndices.first) ;
       if (largestPair.M () < 100) continue ; //PG selection applied in phantom
 
-      //PG do I need this cut?! FIXME
       cont = 0 ;
       for (int iJ = 0 ; iJ < 4 ; ++iJ)
         for (int iJ2 = iJ + 1 ; iJ2 < 4 ; ++iJ2)
           {
-            if (v_f_quarks.at (iJ).DeltaR (v_f_quarks.at (iJ2)) < 0.4) 
-              {
-                cont = 1 ;
-                break ;
-              }
+//            if (v_f_quarks.at (iJ).DeltaR (v_f_quarks.at (iJ2)) < 0.4) 
+//              {
+//                cont = 1 ;
+//                break ;
+//              }
             TLorentzVector thisPair = v_f_quarks.at (iJ) + v_f_quarks.at (iJ2) ;
             if (thisPair.M () < 30)  
               {
@@ -242,6 +245,30 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
   
 }
 
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+struct inputInfo
+{
+  float mass ;
+  string mg_file ;
+  string mg_xs ;
+  string ph_file ;
+  string ph_xs ;
+  void print ()
+    {
+      cout << "----------------------------\n" ;
+      cout << "mass    : " mass ;
+      cout << "mg_file : " mg_file ;
+      cout << "mg_xs   : " mg_xs ;
+      cout << "ph_file : " ph_file ;
+      cout << "ph_xs   : " ph_xs ;
+      cout << "----------------------------\n" ;
+    }
+} ;
+
+
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
@@ -256,19 +283,12 @@ int main (int argc, char ** argv)
 
   LHAPDF::initPDF (0) ;
 
-  if (argc < 2) 
+  if (argc < 3) 
     {
-      cout << "mass is missing" << endl ;
+      cout << "usage " argv[0] << " mass datafile [events]" << endl ;
       exit (1) ;
     }
 
-  int maxEventsPerSample = -1 ;
-  if (argc == 3)
-    {
-      int dummy = atoi (argv[2]) ;
-      if (dummy > 0) maxEventsPerSample = dummy ;
-    }
-    
   double mass = atof (argv[1]) ;
   if (mass != 350 && mass != 500 && mass != 650 && mass != 800 && mass != 1000)
     {
@@ -276,63 +296,55 @@ int main (int argc, char ** argv)
       exit (1) ;
     }
 
+  inputInfo iInfo[6] ;
+
+  ifstream inputstream ;
+  inputstream.open (argv[2]);
+  if (!inputstream.is_open ()) 
+    {
+      cerr << "could not open " << argv[2] << endl ;
+      exit (1) ;
+    }
+//  while (!inputstream.eof ()) 
+  for (int i = 0 ; i < 7 ; ++i)
+    {
+      inputstream >> iInfo[i].mass ;
+      inputstream >> iInfo[i].mg_file ;
+      inputstream >> iInfo[i].mg_xs ;
+      inputstream >> iInfo[i].ph_file ;
+      inputstream >> iInfo[i].ph_xs ;
+      iInfo[i].print () ;
+    }
+  inputstream.close () ;
+  
+  int maxEventsPerSample = -1 ;
+  if (argc == 4)
+    {
+      int dummy = atoi (argv[3]) ;
+      if (dummy > 0) maxEventsPerSample = dummy ;
+    }
+    
   //PG choose the samples
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ----
 
-//  // Sandro's sample
-//  string filename_phbkg = "/Users/govoni/data/lvjj_samples/interference/4jlv_h126/genh126/total.lhe" ;
-//  double XS_phbkg = 0.07762748 * 2 ; // 7.76274847686845293E-002 // pb the factor 2 accounts for muons, electrons
+  string filename_phbkg = iInfo[0].ph_file ;
+  double XS_phbkg = iInfo[0].ph_xs ;
 
-  // pietro's sample
-  string filename_phbkg = "/Users/govoni/data/lvjj_samples/interference/phantom/total.126.lhe" ;
-  double XS_phbkg = 0.07756069 * 2 ; // 7.7560687011E-002 // pb the factor 2 accounts for muons, electrons
-                    
   string filename_mg = "" ;
   double XS_mg = -1 ;
   string filename_phbkgsig = "" ;
   double XS_phbkgsig = -1 ;
 
-  if (mass == 350)
+  for (int i = 0 ; i < 7 ; ++i)
     {
-      filename_mg = "/Users/govoni/data/lvjj_samples/interference/madgraph/madgraph_qqHWWlv4j_mh350.lhe" ;
-      XS_mg = 0.015413 * 2 ; // pb 350 GeV
-    
-      filename_phbkgsig = "/Users/govoni/data/lvjj_samples/interference/phantom/total.350.lhe" ;
-      XS_phbkgsig =  0.087460 * 2 ; // 8.7459661306E-002 // pb 350 GeV
-    }
-  else if (mass == 500)
-    {
-      filename_mg = "/Users/govoni/data/lvjj_samples/interference/madgraph/madgraph_500GeV_4jlv.lhe" ;
-      XS_mg = 0.009129 ; // pb 500 GeV
-    
-      filename_phbkgsig = "/Users/govoni/data/lvjj_samples/interference/phantom/total.500.lhe" ;
-//      XS_phbkgsig = 0.078904216 * 2 ; // 7.890421624985394E-002 // pb 500 GeV // sample from Sandro
-      XS_phbkgsig = 0.078719  * 2 ; // 7.8718631364E-002 // pb 500 GeV // sample from Pietro
-    }
-  else if (mass == 650)
-    {
-      filename_mg = "/Users/govoni/data/lvjj_samples/interference/madgraph/madgraph_qqHWWlv4j_mh650.lhe" ;
-      XS_mg = 0.0019246 * 2 ; // pb 650 GeV
-      
-      filename_phbkgsig = "/Users/govoni/data/lvjj_samples/interference/phantom/total.650.lhe" ;
-      XS_phbkgsig = 0.076244 * 2 ; // 7.62444816705E-002 // pb 650 GeV
-    }
-  else if (mass == 800)
-    {
-      filename_mg = "/Users/govoni/data/lvjj_samples/interference/madgraph/H800_lvl4jets.lhe" ;
-      XS_mg = 0.0014136 ; // pb 800 GeV
-      
-      // XS_phbkgsig = 0.075067956 * 2 ; // 7.506795619825214E-002 // pb 800 GeV // sample from Sandro
-      filename_phbkgsig = "/Users/govoni/data/lvjj_samples/interference/phantom/total.800.lhe" ;
-      XS_phbkgsig = 0.075085 * 2 ; // 7.5085416255E-002 // pb 800 GeV // sample from Pietro
-    }
-  else if (mass == 1000)
-    {
-      filename_mg = "/Users/govoni/data/lvjj_samples/interference/madgraph/madgraph_qqHWWlv4j_mh1000.lhe" ;
-      XS_mg = 0.00016269 * 2 ; // pb 1000 GeV
-      
-      filename_phbkgsig = "/Users/govoni/data/lvjj_samples/interference/phantom/total.1000.lhe" ;
-      XS_phbkgsig =  0.074253 * 2 ; // 7.4253338203E-002 // pb 1000 GeV
+      if (mass == iInfo[i].mass)
+        {
+          filename_mg       = iInfo[i].mg_file ;
+          XS_mg             = iInfo[i].mg_xs ;
+          filename_phbkgsig = iInfo[i].ph_file ;
+          XS_phbkgsig       = iInfo[i].ph_xs ;
+          break ;
+        }
     }
 
   //PG messages
