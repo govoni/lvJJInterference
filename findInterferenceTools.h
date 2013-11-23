@@ -92,8 +92,8 @@ struct etasort: public std::binary_function<TLV, TLV, bool>
 template <class TLV>
 pair<int, int> findPairWithLargestDeta (const vector<TLV> & v_f_quarks)
 {
-  int minimum = min_element (v_f_quarks.begin (), v_f_quarks.end (), etasort<TLV> ()) - v_f_quarks.begin () ;
-  int maximum = max_element (v_f_quarks.begin (), v_f_quarks.end (), etasort<TLV> ()) - v_f_quarks.begin () ;
+  int minimum = std::min_element (v_f_quarks.begin (), v_f_quarks.end (), etasort<TLV> ()) - v_f_quarks.begin () ;
+  int maximum = std::max_element (v_f_quarks.begin (), v_f_quarks.end (), etasort<TLV> ()) - v_f_quarks.begin () ;
   return pair<int, int> (minimum, maximum) ;
   
 }
