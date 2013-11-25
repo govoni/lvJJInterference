@@ -1,5 +1,4 @@
-// c++ -o findInterference `root-config --glibs --cflags` `lhapdf-config --cppflags  --ldflags` -lm findInterference.cpp
-// c++ -o findInterference `root-config --glibs --cflags` -I/usr/local/include -L/usr/local/lib -lLHAPDF -lm findInterference.cpp
+// c++ -o findInterference `root-config --glibs --cflags` `lhapdf-config --cppflags  --ldflags` -lGenVector -lm findInterference.cpp
 
 
 #include "LHEF.h"
@@ -251,7 +250,7 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
 
 struct inputInfo
 {
-  float mass ;
+  double mass ;
   string mg_file ;
   double mg_xs ;
   string ph_file ;
@@ -259,11 +258,11 @@ struct inputInfo
   void print ()
     {
       cout << "----------------------------\n" ;
-      cout << "mass    : " << mass ;
-      cout << "mg_file : " << mg_file ;
-      cout << "mg_xs   : " << mg_xs ;
-      cout << "ph_file : " << ph_file ;
-      cout << "ph_xs   : " << ph_xs ;
+      cout << "mass    : " << mass << "\n" ;
+      cout << "mg_file : " << mg_file << "\n" ;
+      cout << "mg_xs   : " << mg_xs << "\n" ;
+      cout << "ph_file : " << ph_file << "\n" ;
+      cout << "ph_xs   : " << ph_xs << "\n" ;
       cout << "----------------------------\n" ;
     }
 } ;
@@ -306,7 +305,7 @@ int main (int argc, char ** argv)
       exit (1) ;
     }
 //  while (!inputstream.eof ()) 
-  for (int i = 0 ; i < 7 ; ++i)
+  for (int i = 0 ; i < 6 ; ++i)
     {
       inputstream >> iInfo[i].mass ;
       inputstream >> iInfo[i].mg_file ;
@@ -335,7 +334,7 @@ int main (int argc, char ** argv)
   string filename_phbkgsig = "" ;
   double XS_phbkgsig = -1 ;
 
-  for (int i = 0 ; i < 7 ; ++i)
+  for (int i = 0 ; i < 6 ; ++i)
     {
       if (mass == iInfo[i].mass)
         {
