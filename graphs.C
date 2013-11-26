@@ -132,21 +132,74 @@ struct intCont
       return ;
     }
 
-
-
 } ;
-
 
 
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
+TGraph * makeLog (TGraph * orig)
+  {
+    TGraph * dummy = new TGraph (orig->GetN ()) ;
+    for (int k = 0 ; k < orig->GetN () ; ++k) 
+      {
+        double x, y ;
+        orig->GetPoint (k, x, y) ;
+        dummy->SetPoint (k, x, TMath::Log (y)) ;
+      }
+    return dummy ;
+  }
+
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+void testInterpolation (TGraph ** tg_sample_par, TString sample)
+  {
+    TGraph * log_tg_sample_par0 = makeLog (tg_sample_par[0]) ;
+
+    TCanvas * c_merge = new TCanvas () ;
+    bkg = (TH1F *) c_merge->DrawFrame (200, 0.0000001, 1500, 0.0007) ;
+    c_merge->SetLogy () ;
+    bkg->GetXaxis ()->SetTitle ("m_{WW}") ;
+    bkg->GetYaxis ()->SetTitle ("signal") ;
+    
+    //PG loop on candidate masses
+    for (double mass = 300 ; mass < 1100 ; mass += 25)
+      {
+        TF1 * func = new TF1 ("func",crystalBallLowHigh, 200, 2000, 7) ;
+        func->SetParameter (0, TMath::Exp (log_tg_sample_par0->Eval (mass))) ;
+        for (int iPar = 1 ; iPar < 7 ; ++iPar)
+          func->SetParameter (iPar, tg_sample_par[iPar]->Eval (mass)) ;
+        func->SetLineWidth (1) ;
+        func->SetLineColor (kBlue + 1) ;
+        func->SetNpx (10000) ;
+        func->Draw ("same") ;
+      } //PG loop on candidate masses
+  
+    c_merge->Print (TString ("interpol_log_") + sample + TString (".pdf"), "pdf") ;
+    c_merge->SetLogy (0) ;
+    c_merge->Print (TString ("interpol_lin_") + sample + TString (".pdf"), "pdf") ;
+  }
+
+
+
+// ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
+// ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
+
+
 int graphs () 
 {
-  TGraph ** tg_sig_par = new TGraph * [7] ;
+  //PG prepare the graphs
+  //PG ---- ---- ---- ---- ---- ---- ---- ----
+
+  TGraph ** tg_sig_par = new TGraph * [7] ; // [parameter][mass]
   for (int k = 0 ; k < 7 ; ++k) tg_sig_par[k] = new TGraph (5) ;
   TGraph ** tg_sAi_par = new TGraph * [7] ;
   for (int k = 0 ; k < 7 ; ++k) tg_sAi_par[k] = new TGraph (5) ;
+
+  //PG fill the graphs from the input files
+  //PG ---- ---- ---- ---- ---- ---- ---- ----
 
   int i = 0 ; 
 
@@ -165,6 +218,35 @@ int graphs ()
   intCont ic_1000 ("results_interference.1000.root", 1000) ;   
   ic_1000.setsigGraphs (tg_sig_par, i++) ;   
   ic_1000.setsAiGraphs (tg_sAi_par, i++) ;   
+
+  //PG plot the interpolation for the signal
+  //PG ---- ---- ---- ---- ---- ---- ---- ----
+  testInterpolation (tg_sig_par, "sig") ;
+  testInterpolation (tg_sAi_par, "sAi") ;
+
+//  TCanvas * c_merge = new TCanvas () ;
+//  bkg = (TH1F *) c_merge->DrawFrame (200, 0.0000001, 1500, 0.002) ;
+//  c_merge->SetLogy () ;
+//  bkg->GetXaxis ()->SetTitle ("m_{WW}") ;
+//  bkg->GetYaxis ()->SetTitle ("signal") ;
+//
+//  TGraph * log_tg_sig_par0 = makeLog (tg_sig_par[0]) ;
+//
+//  //PG loop on candidate masses
+//  for (double mass = 300 ; mass < 1100 ; mass += 25)
+//    {
+//      TF1 * func = new TF1 ("func",crystalBallLowHigh, 200, 2000, 7) ;
+//      func->SetParameter (0, TMath::Exp (log_tg_sig_par0->Eval (mass))) ;
+//      for (int iPar = 1 ; iPar < 7 ; ++iPar)
+//        func->SetParameter (iPar, tg_sig_par[iPar]->Eval (mass)) ;
+//      func->SetLineWidth (1) ;
+//      func->SetNpx (10000) ;
+//      func->Draw ("same") ;
+//    } //PG loop on candidate masses
+//
+//  c_merge->Print ("signal_interpol.pdf", "pdf") ;
+//  c_merge->SetLogy (0) ;
+//  c_merge->Print ("signal_interpol_lin.pdf", "pdf") ;
 
   return 0 ;  
 
