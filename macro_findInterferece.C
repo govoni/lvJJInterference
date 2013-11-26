@@ -1,9 +1,9 @@
 /*
-r00t -q macro_findInterferece.C\(\"findInterference.350.root\",350\)
-r00t -q macro_findInterferece.C\(\"findInterference.500.root\",500\)
-r00t -q macro_findInterferece.C\(\"findInterference.650.root\",650\)
-r00t -q macro_findInterferece.C\(\"findInterference.800.root\",800\)
-r00t -q macro_findInterferece.C\(\"findInterference.1000.root\",1000\)
+r00t -q macro_findInterferece.C\(\"findInterference.350.root\",350,1\)
+r00t -q macro_findInterferece.C\(\"findInterference.500.root\",500,2\)
+r00t -q macro_findInterferece.C\(\"findInterference.650.root\",650,4\)
+r00t -q macro_findInterferece.C\(\"findInterference.800.root\",800,4\)
+r00t -q macro_findInterferece.C\(\"findInterference.1000.root\",1000,2\)
 */
 
 
@@ -178,7 +178,6 @@ Double_t doublePeakModel (Double_t * xx, Double_t * par)
 }
 
 
-
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
@@ -280,8 +279,6 @@ int findBin (TH1F * h, double val)
 }
 
 
-
-
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
@@ -296,10 +293,37 @@ double normaliseToBinWidth (TH1F * h)
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
-int macro_findInterferece (string filename, double mass)                                                        
+//PG parameters of the signal-and-interference first,
+//PG parameters of the signal-only later
+double ratio_crystalBallLowHigh (double* x, double* par)
+{
+  double den = crystalBallLowHigh (x, par + 7) ; // signal only
+  if (den == 0) return -1. ;
+  double num = crystalBallLowHigh (x, par) ;    // signal and interference
+  return num / den ;
+}
+
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+//PG parameters of the signal-and-interference first,
+//PG parameters of the signal-only later
+double diff_crystalBallLowHigh (double* x, double* par)
+{
+  return crystalBallLowHigh (x, par) - crystalBallLowHigh (x, par + 7) ;
+  //PG    signal and interference          signal only
+}
+
+
+// ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
+// ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
+
+
+int macro_findInterferece (string filename, double mass, int initialRebin = 1)                                                        
 {        
 
-//  TVirtualFitter::SetDefaultFitter ("Minuit2") ;
+  TVirtualFitter::SetDefaultFitter ("Minuit2") ;
   gSystem->Load ("Functions.cc") ;
   gStyle->SetPadTopMargin (0.1) ;
 
@@ -308,10 +332,10 @@ int macro_findInterferece (string filename, double mass)
   TH1F * h_MWW_phbkg    = (TH1F *) f->Get ("h_MWW_phbkg") ;
   TH1F * h_MWW_mg       = (TH1F *) f->Get ("h_MWW_mg") ;
 
-  int reBin = 1 ;
-  if (mass > 480) reBin = 2 ;
-  if (mass > 810) reBin = 6 ;
-  double rangeScale = 1.5 ;
+  int reBin = initialRebin ;
+  if (mass > 480) reBin *= 2 ;
+  if (mass > 810) reBin *= 6 ;
+  double rangeScale = 1.5 ; // for plotting purposes
   if (mass > 480) rangeScale = 2 ;
   
   int scaling = 0 ;
@@ -388,8 +412,6 @@ int macro_findInterferece (string filename, double mass)
   TH1F * relDiff = delta->Clone ("relDiff") ;
   relDiff->Divide (h_MWW_mg) ;
 
-
-
   //PG plotting
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ----
 
@@ -426,6 +448,18 @@ int macro_findInterferece (string filename, double mass)
   
   TCanvas * c4_mg = new TCanvas ("c4_mg", "c4_mg") ;
 
+  TF1 * gauss_mg = new TF1 ("gauss_mg", "gaus", 0, 2000) ;
+  gauss_mg->SetLineWidth (1) ;
+  gauss_mg->SetLineColor (kGray + 2) ;
+  h_MWW_mg->Fit ("gauss_mg", "Q+", "", mass - 1. * h_MWW_mg->GetRMS () , mass + 1. * h_MWW_mg->GetRMS ()) ;
+//  h_MWW_mg->Fit ("gauss_mg", "Q+", "", mass - 2. * h_MWW_mg->GetBinWidth (1) , mass + 1. * h_MWW_mg->GetBinWidth (1)) ;
+//  float sigma_diff = 10. ;
+//  do {
+//      sigma_diff = gauss_mg->GetParameter (2) ;
+//      h_MWW_mg->Fit ("gauss_mg", "Q+", "", mass - 1. * gauss_mg->GetParameter (2), mass + 1. * gauss_mg->GetParameter (2)) ;
+//      sigma_diff -= gauss_mg->GetParameter (2) ;
+//    } while (fabs (sigma_diff) > 0.2) ;
+
   TF1 * func_mg_1 = new TF1 ("func_mg_1", crystalBallLowHigh, 0, 2000, 7) ;
   func_mg_1->SetNpx (10000) ;
   func_mg_1->SetLineWidth (1) ;
@@ -436,31 +470,13 @@ int macro_findInterferece (string filename, double mass)
 
   func_mg_1->SetParameter (0, h_MWW_mg->GetBinContent (h_MWW_mg->GetMaximumBin ())) ;  // multiplicative scale
   func_mg_1->SetParameter (1, mass) ;                                                  // mean
-  func_mg_1->SetParameter (2, h_MWW_mg->GetRMS ()) ;                                   // gaussian sigma
-  func_mg_1->SetParLimits (2, 0.1 * h_MWW_mg->GetRMS (), 20 * h_MWW_mg->GetRMS ()) ;
+  func_mg_1->SetParameter (2, gauss_mg->GetParameter (2)) ;                            // gaussian sigma
+  func_mg_1->SetParLimits (2, 0.01 * h_MWW_mg->GetRMS (), 20 * h_MWW_mg->GetRMS ()) ;
   func_mg_1->SetParameter (3, 1.5) ;                                                   // right junction
-//  func_mg_1->SetParLimits (3, 0.1, 5) ;                                              // right junction
   func_mg_1->SetParameter (4, 2) ;                                                     // right power law order
   func_mg_1->SetParameter (5, 0.95) ;                                                  // left junction
-//  func_mg_1->SeaParLimits (5, 0.1, 5) ;                                              // left junction
+//  func_mg_1->SetParameter (5, 0.95) ;                                                  // left junction
   func_mg_1->SetParameter (6, 2.38) ;                                                  // left power law order
-
-//  TF1 * func_mg_1 = new TF1 ("func_mg_1", doubleSuperGausCumCauda, 0, 2000, 7) ;
-//  func_mg_1->SetNpx (10000) ;
-//  func_mg_1->SetLineWidth (1) ;
-//  func_mg_1->SetLineColor (kBlue + 1) ;
-//  func_mg_1->SetParName (0, "N") ;
-//  func_mg_1->SetParName (1, "mean") ;
-//  func_mg_1->SetParName (2, "Nsigma") ;
-//  func_mg_1->SetParName (3, "alphaR") ;
-//  func_mg_1->SetParName (4, "alphaL") ;
-//
-//  func_mg_1->SetParameter (0, 1.) ;                  // multiplicative scale
-//  func_mg_1->SetParameter (1, mass) ;                // mean
-//  func_mg_1->SetParameter (2, h_MWW_mg->GetRMS ()) ; // gaussian sigma
-//  func_mg_1->SetParLimits (2, 0.1 * h_MWW_mg->GetRMS (), 20 * h_MWW_mg->GetRMS ()) ;
-//  func_mg_1->SetParameter (3, 1) ;                   // right junction
-//  func_mg_1->SetParameter (4, 1) ;                   // left junction
 
   int sign = 1 ;
   if (mass < 400) sign = -2 ;
@@ -473,6 +489,12 @@ int macro_findInterferece (string filename, double mass)
   h_MWW_mg->Fit ("func_mg_1", "+L", "", 0.5 * mass - 50, 2 * mass) ;
   cout << "CHI2 / NDOF = " << func_mg_1->GetChisquare () /func_mg_1->GetNDF () << endl ;
 
+//  TH1F * h_MWW_mg_error = h_MWW_mg->Clone ("h_MWW_mg_error") ;
+//  (TVirtualFitter::GetFitter ())->GetConfidenceIntervals (h_MWW_mg_error, 0.68) ;
+//  h_MWW_mg_error->SetMarkerSize (0) ;
+//  h_MWW_mg_error->SetFillColor (kAzure - 9) ;
+//  h_MWW_mg_error->SetFillStyle (3001) ;
+
   ymax = h_MWW_mg->GetBinContent (h_MWW_mg->GetMaximumBin ()) ;
   ymin = h_MWW_mg->GetBinContent (h_MWW_mg->GetMinimumBin ()) ;
   if (ymin <= 0) ymin = ymax / 10000. ; 
@@ -481,6 +503,7 @@ int macro_findInterferece (string filename, double mass)
   c4_mg_frame->SetTitle (0) ;
   c4_mg_frame->SetStats (0) ;
   c4_mg_frame->GetXaxis ()->SetTitle ("m_{WW} (GeV)") ;
+//  h_MWW_mg_error->Draw ("same") ;
   h_MWW_mg->Draw ("EPsame") ;
 
   double rightTh = fabs (func_mg_1->GetParameter (3)) * func_mg_1->GetParameter (2) + func_mg_1->GetParameter (1) ;
@@ -496,7 +519,10 @@ int macro_findInterferece (string filename, double mass)
   l_leftTh->Draw ("same") ;
 
   c4_mg->Update () ;
-  c4_mg->Print (TString ("signals_mg") + suffix, "pdf") ;
+  c4_mg->Print (TString ("signals_mg_log") + suffix, "pdf") ;
+
+  c4_mg->SetLogy (0) ;
+  c4_mg->Print (TString ("signals_mg_lin") + suffix, "pdf") ;
 
   //PG (SBI - B) only ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
@@ -517,7 +543,7 @@ int macro_findInterferece (string filename, double mass)
   func_ph_1->SetParameter (0, diff->Integral ()) ;       // multiplicative scale
   func_ph_1->SetParameter (1, mass) ;                    // mean
   func_ph_1->SetParameter (2, 2 * gauss->GetParameter (2)) ; // gaussian sigma
-//  func_ph_1->SetParLimits (2, 0.1 * gauss->GetParameter (2), 20 * gauss->GetParameter (2)) ;
+  func_ph_1->SetParLimits (2, 0., mass) ;
   func_ph_1->SetParameter (3, 1) ;                       // right junction
   func_ph_1->SetParLimits (3, 0.1, 5) ;                  // right junction
   func_ph_1->FixParameter (4, 3) ;                       // right power law order            //PG NB THIS IS FIXED
@@ -545,6 +571,7 @@ int macro_findInterferece (string filename, double mass)
   ymax = max (ymax, func_ph_1->GetMaximum ()) ;
   ymin = diff->GetBinContent (diff->GetMinimumBin ()) ;
   ymin = max (ymin, -0.1 * ymax) ;
+  if (ymin <= 0) ymin = ymax / 10000. ; 
   TH1F * c4_ph_frame = (TH1F *) c4_ph->DrawFrame (200, 0.9 * ymin, rangeScale * mass, 1.1 * ymax) ;
   c4_ph_frame->SetTitle (0) ;
   c4_ph_frame->SetStats (0) ;
@@ -569,9 +596,12 @@ int macro_findInterferece (string filename, double mass)
   l_leftTh_ph->SetLineColor (kRed) ;
   l_leftTh_ph->Draw ("same") ;
 
-  c4_ph->Print (TString ("signals_ph") + suffix, "pdf") ;
+  c4_ph->Print (TString ("signals_ph_lin") + suffix, "pdf") ;
+  c4_ph->SetLogy () ;
+  c4_ph->Print (TString ("signals_ph_log") + suffix, "pdf") ;
 
-  //PG (SBI - B) - S only   i.e   INTERFERENCE FIT ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+  //PG (SBI - B) - S only   i.e   INTERFERENCE FIT 
+  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
   cout << "-------------------\nFITTING THE INTERFERENCE\n\n-------------------\n" ;
 
@@ -597,38 +627,66 @@ int macro_findInterferece (string filename, double mass)
   f_doublePeakModel->SetParName (3, "gamma") ; 
 
   f_doublePeakModel->SetParameter (0, -0.05 * h_MWW_mg->GetBinContent (h_MWW_mg->GetMaximumBin ())) ;
-//  f_doublePeakModel->SetParameter (0, -0.000002) ;
   f_doublePeakModel->SetParameter (1, mass) ; 
   f_doublePeakModel->FixParameter (2, 0.0008) ; 
   f_doublePeakModel->SetParameter (3, mass * mass * 0.1 * 0.1) ;
 
-//  f_doublePeakModel->SetParameter (2, 10.) ; 
-//  f_doublePeakModel->SetParLimits (2, 0., 1000.) ; 
-//  f_doublePeakModel->SetParameter (2, fabs (func_ph_1->GetParameter (1) - func_mg_1->GetParameter (1))) ;
   double aveWidth = 0.5 * sqrt (
       func_ph_1->GetParameter (2) * func_ph_1->GetParameter (2) +
       func_mg_1->GetParameter (2) * func_mg_1->GetParameter (2)  
     ) ;
-//  f_doublePeakModel->SetParameter (3, 2 * aveWidth) ;
   delta->Fit ("f_doublePeakModel", "+", "same", 0.5 * mass - 50, 2 * mass) ;
-//  f_doublePeakModel->SetParameters (f_doublePeakModel->GetParameters ()) ;
-//  f_doublePeakModel->SetLineColor (kRed + 3) ;
-//  delta->Fit ("f_doublePeakModel", "+L", "same", 0.5 * mass - 50, 2 * mass) ;
 
   delta->Draw ("histsame") ;
-//  f_doublePeakModel->Draw ("same") ;
   c3_leg = new TLegend (0.5,0.8,0.9,0.95) ;
   c3_leg->SetFillStyle (0) ;
   c3_leg->SetBorderSize (0) ;
   c3_leg->SetTextFont (42) ;
   c3_leg->AddEntry (delta, "(SBI - B) - S","l") ;
   
+  //PG plot the result of the fits on top
+  TF1 * f_difference = new TF1 ("f_difference", diff_crystalBallLowHigh, 0, 2000, 14) ;
+  Double_t params_difference[14] ;
+  func_ph_1->GetParameters (params_difference) ;
+  func_mg_1->GetParameters (params_difference + 7) ;
+  f_difference->SetParameters (params_difference) ;
+  f_difference->SetNpx (10000) ;
+  f_difference->SetLineWidth (2) ;
+  f_difference->SetLineColor (kGray + 1) ;
+  f_difference->Draw ("same") ;
+
   c3_leg->Draw () ;
 
   c3->Print (TString ("interf") + suffix, "pdf") ;
 
+  //PG (SBI - B) / S only   i.e   CORRECTION FACTOR
+  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
-  //PG S only, and (SBI - B) ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+  TCanvas * c5 = new TCanvas ("c5", "c5") ;
+  double ymax = ratio->GetBinContent (ratio->GetMaximumBin ()) ;
+  double ymin = ratio->GetBinContent (ratio->GetMinimumBin ()) ;
+  if (ymin > 0) ymin *= 0.5 ;
+  else          ymin *= 1.5 ;
+//  if (mass > 800 && ymin < -3 * ymax) ymin = -2 * ymax ;
+  if (ymin < 0) ymin = - 0.1 ;
+  TH1F * c5_frame = (TH1F *) c5->DrawFrame (200, ymin, rangeScale * mass, 2 * ymax) ;
+  c5_frame->SetTitle (0) ;
+  c5_frame->SetStats (0) ;
+  c5_frame->GetXaxis ()->SetTitle ("m_{WW} (GeV)") ;
+  
+  ratio->Draw ("hist same") ;
+  //PG plot the result of the fits on top
+  TF1 * f_ratio = new TF1 ("f_ratio", ratio_crystalBallLowHigh, 0, 2000, 14) ;
+  f_ratio->SetParameters (params_difference) ;
+  f_ratio->SetNpx (10000) ;
+  f_ratio->SetLineWidth (2) ;
+  f_ratio->SetLineColor (kGray + 2) ;
+  f_ratio->Draw ("same") ;
+  
+  c5->Print (TString ("corr_factor") + suffix, "pdf") ;
+
+  //PG plotting S only, and (SBI - B) 
+  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
   TCanvas * c4 = new TCanvas ("c4", "c4") ;
   double ymax = h_MWW_mg->GetBinContent (h_MWW_mg->GetMaximumBin ()) ;
@@ -658,45 +716,17 @@ int macro_findInterferece (string filename, double mass)
   c4->Print (TString ("signals") + suffix, "pdf") ;
 
   //PG output of the fitting function parameters
+  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
-  std::ofstream outfile;
+  TString outfilename = filename.c_str () ;
+  outfilename.ReplaceAll ("findInterference", "results_interference") ;
+  TFile outputfile (outfilename, "recreate") ;
+  outputfile.cd () ;
+  f_doublePeakModel->Write () ;
+  func_mg_1->Write () ;
+  func_ph_1->Write () ;
+  outputfile.Close () ;  
 
-  outfile.open ("graphs.txt", std::ios_base::app) ;
-  outfile << "  \n  // ----> MASS " << mass << " ---- ---- ---- \n\n" ;
-  outfile << "  // interference parametrisation:\n" ;
-  outfile << "  tg_par0->SetPoint (i, " << mass << ", " << f_doublePeakModel->GetParameter (0) << ") ;\n" ;
-  outfile << "  tg_par1->SetPoint (i, " << mass << ", " << f_doublePeakModel->GetParameter (1) << ") ;\n" ;
-  outfile << "  tg_par2->SetPoint (i, " << mass << ", " << f_doublePeakModel->GetParameter (2) << ") ;\n" ;
-  outfile << "  tg_par3->SetPoint (i, " << mass << ", " << f_doublePeakModel->GetParameter (3) << ") ;\n" ;
-  outfile << "  TF1 * func_" << mass << " = new TF1 (\"func_" << mass << "\",doublePeakModel, 200, 2000, 4) ;\n" ; 
-  outfile << "  double params_" << mass << "[4] = {" << f_doublePeakModel->GetParameter (0) << ", " << f_doublePeakModel->GetParameter (1) << ", " << f_doublePeakModel->GetParameter (2) << ", " << f_doublePeakModel->GetParameter (3) << " } ;\n" ;
-  outfile << "  func_" << mass << "->SetParameters (params_" << mass << ") ;\n" ; 
-  outfile << "  // MG signal only parametrisation:\n" ;
-  outfile << "  tg_sig_par0->SetPoint (i, " << mass << ", " << func_mg_1->GetParameter (0) << ") ;\n" ;
-  outfile << "  tg_sig_par1->SetPoint (i, " << mass << ", " << func_mg_1->GetParameter (1) << ") ;\n" ;
-  outfile << "  tg_sig_par2->SetPoint (i, " << mass << ", " << func_mg_1->GetParameter (2) << ") ;\n" ;
-  outfile << "  tg_sig_par3->SetPoint (i, " << mass << ", " << func_mg_1->GetParameter (3) << ") ;\n" ;
-  outfile << "  tg_sig_par4->SetPoint (i, " << mass << ", " << func_mg_1->GetParameter (4) << ") ;\n" ;
-  outfile << "  tg_sig_par5->SetPoint (i, " << mass << ", " << func_mg_1->GetParameter (5) << ") ;\n" ;
-  outfile << "  tg_sig_par6->SetPoint (i, " << mass << ", " << func_mg_1->GetParameter (6) << ") ;\n" ;
-  outfile << "  TF1 * func_sig_" << mass << " = new TF1 (\"func_sig_" << mass << "\",crystalBallLowHigh, 200, 2000, 7) ;\n" ; 
-  outfile << "  double params_sig_" << mass << "[7] = {" << func_mg_1->GetParameter (0) << ", " << func_mg_1->GetParameter (1) << ", " << func_mg_1->GetParameter (2) << ", " << func_mg_1->GetParameter (3) << ", " << func_mg_1->GetParameter (4) << ", " << func_mg_1->GetParameter (5) << ", " << func_mg_1->GetParameter (6)  << " } ;\n" ;
-  outfile << "  func_sig_" << mass << "->SetParameters (params_sig_" << mass << ") ;\n" ; 
-  outfile << "  // PG SBI - B  parametrisation:\n" ;
-  outfile << "  tg_sAi_par0->SetPoint (i, " << mass << ", " << func_ph_1->GetParameter (0) << ") ;\n" ;
-  outfile << "  tg_sAi_par1->SetPoint (i, " << mass << ", " << func_ph_1->GetParameter (1) << ") ;\n" ;
-  outfile << "  tg_sAi_par2->SetPoint (i, " << mass << ", " << func_ph_1->GetParameter (2) << ") ;\n" ;
-  outfile << "  tg_sAi_par3->SetPoint (i, " << mass << ", " << func_ph_1->GetParameter (3) << ") ;\n" ;
-  outfile << "  tg_sAi_par4->SetPoint (i, " << mass << ", " << func_ph_1->GetParameter (4) << ") ;\n" ;
-  outfile << "  tg_sAi_par5->SetPoint (i, " << mass << ", " << func_ph_1->GetParameter (5) << ") ;\n" ;
-  outfile << "  tg_sAi_par6->SetPoint (i, " << mass << ", " << func_ph_1->GetParameter (6) << ") ;\n" ;
-  outfile << "  TF1 * func_sAi_" << mass << " = new TF1 (\"func_sAi_" << mass << "\",crystalBallLowHigh, 200, 2000, 7) ;\n" ; 
-  outfile << "  double params_sAi_" << mass << "[7] = {" << func_ph_1->GetParameter (0) << ", " << func_ph_1->GetParameter (1) << ", " << func_ph_1->GetParameter (2) << ", " << func_ph_1->GetParameter (3) << ", " << func_ph_1->GetParameter (4) << ", " << func_ph_1->GetParameter (5) << ", " << func_ph_1->GetParameter (6)  << " } ;\n" ;
-  outfile << "  func_sAi_" << mass << "->SetParameters (params_sAi_" << mass << ") ;\n" ; 
-  outfile << "  i++ ;\n" ;
-
-  outfile.close () ;
-  
   cout << "scaling applied: " << scaling << endl ;
 
   return 0 ;
