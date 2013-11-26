@@ -663,13 +663,13 @@ int macro_findInterferece (string filename, double mass, int initialRebin = 1)
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
   TCanvas * c5 = new TCanvas ("c5", "c5") ;
-  double ymax = ratio->GetBinContent (ratio->GetMaximumBin ()) ;
-  double ymin = ratio->GetBinContent (ratio->GetMinimumBin ()) ;
+  ymax = ratio->GetBinContent (ratio->GetMaximumBin ()) ;
+  ymin = ratio->GetBinContent (ratio->GetMinimumBin ()) ;
   if (ymin > 0) ymin *= 0.5 ;
   else          ymin *= 1.5 ;
 //  if (mass > 800 && ymin < -3 * ymax) ymin = -2 * ymax ;
   if (ymin < 0) ymin = - 0.1 ;
-  TH1F * c5_frame = (TH1F *) c5->DrawFrame (200, ymin, rangeScale * mass, 2 * ymax) ;
+  TH1F * c5_frame = (TH1F *) c5->DrawFrame (200, 0., rangeScale * mass, 6.) ;
   c5_frame->SetTitle (0) ;
   c5_frame->SetStats (0) ;
   c5_frame->GetXaxis ()->SetTitle ("m_{WW} (GeV)") ;
@@ -680,7 +680,7 @@ int macro_findInterferece (string filename, double mass, int initialRebin = 1)
   f_ratio->SetParameters (params_difference) ;
   f_ratio->SetNpx (10000) ;
   f_ratio->SetLineWidth (2) ;
-  f_ratio->SetLineColor (kGray + 2) ;
+  f_ratio->SetLineColor (kBlue + 2) ;
   f_ratio->Draw ("same") ;
   
   c5->Print (TString ("corr_factor") + suffix, "pdf") ;
