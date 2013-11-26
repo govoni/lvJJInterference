@@ -154,16 +154,9 @@ TGraph * makeLog (TGraph * orig)
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
-void testInterpolation (TGraph ** tg_sample_par, TString sample)
+void drawShapes (TGraph ** tg_sample_par)
   {
     TGraph * log_tg_sample_par0 = makeLog (tg_sample_par[0]) ;
-
-    TCanvas * c_merge = new TCanvas () ;
-    bkg = (TH1F *) c_merge->DrawFrame (200, 0.0000001, 1500, 0.0007) ;
-    c_merge->SetLogy () ;
-    bkg->GetXaxis ()->SetTitle ("m_{WW}") ;
-    bkg->GetYaxis ()->SetTitle ("signal") ;
-    
     //PG loop on candidate masses
     for (double mass = 300 ; mass < 1100 ; mass += 25)
       {
@@ -176,12 +169,96 @@ void testInterpolation (TGraph ** tg_sample_par, TString sample)
         func->SetNpx (10000) ;
         func->Draw ("same") ;
       } //PG loop on candidate masses
-  
+    return ;
+  }
+
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+void showInterpolation (TGraph ** tg_sample_par, TString sample)
+  {
+
+    TCanvas * c_merge = new TCanvas () ;
+    bkg = (TH1F *) c_merge->DrawFrame (200, 0.0000001, 1500, 0.002) ;
+    c_merge->SetLogy () ;
+    bkg->GetXaxis ()->SetTitle ("m_{WW}") ;
+    bkg->GetYaxis ()->SetTitle ("signal") ;
+
+    drawShapes (tg_sample_par) ;
+    
     c_merge->Print (TString ("interpol_log_") + sample + TString (".pdf"), "pdf") ;
     c_merge->SetLogy (0) ;
     c_merge->Print (TString ("interpol_lin_") + sample + TString (".pdf"), "pdf") ;
+    return ;
   }
 
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+void testInterpolation (TGraph ** tg_sample_par, TString sample)
+  {
+
+    //PG testing sets for the test
+    TGraph ** tg_test_par = new TGraph * [7] ; // [parameter][mass]
+    for (int k = 0 ; k < 7 ; ++k) tg_test_par[k] = new TGraph (4) ;
+    
+    TCanvas * c_merge = new TCanvas () ;
+    bkg = (TH1F *) c_merge->DrawFrame (200, 0.0000001, 1500, 0.002) ;
+    c_merge->SetLogy () ;
+    bkg->GetXaxis ()->SetTitle ("m_{WW}") ;
+    bkg->GetYaxis ()->SetTitle ("signal") ;
+
+    //PG loop on the point to be removed
+    for (int iTest = 0 ; iTest < 5 ; ++iTest)
+      {
+        cout << " ==== iTest " << iTest << endl ;
+        int iActualMass = 0 ;
+        //PG fill the temporary graphs
+        for (int iMass = 0 ; iMass < 5 ; ++iMass)
+          {
+            if (iMass == iTest) continue ;
+            double x = 0 ; 
+            double y = 0 ;
+            for (int k = 0 ; k < 7 ; ++k) 
+              {
+                tg_sample_par[k]->GetPoint (iMass, x, y) ;      
+                tg_test_par[k]->SetPoint (iActualMass, x, y) ;
+              }
+            ++iActualMass ;
+          } //PG fill the temporary graphs
+        
+        // plot the interpolation
+        bkg->Draw () ;
+        drawShapes (tg_test_par) ;
+
+        // overlap the missing point
+        double dummy = 0 ;
+        double mass = 0 ;
+        tg_sample_par[0]->GetPoint (iTest, mass, dummy) ;
+        TF1 * func = new TF1 ("func",crystalBallLowHigh, 200, 2000, 7) ;
+        TGraph * log_tg_this_sample_par0 = makeLog (tg_sample_par[0]) ;
+        func->SetParameter (0, TMath::Exp (log_tg_this_sample_par0->Eval (mass))) ;
+        for (int iPar = 1 ; iPar < 7 ; ++iPar)
+          func->SetParameter (iPar, tg_sample_par[iPar]->Eval (mass)) ;
+        func->SetLineColor (kRed) ;
+        func->Draw ("same") ;
+        
+        // output        
+        c_merge->SetLogy (1) ;
+        TString name = "test_interpol_log_" ;
+        name += sample ; name += "_" ; name += iTest ; name += ".pdf" ;
+        c_merge->Print (name, "pdf") ;
+        name = "test_interpol_lin_" ;
+        name += sample ; name += "_" ; name += iTest ; name += ".pdf" ;
+        c_merge->SetLogy (0) ;
+        c_merge->Print (name, "pdf") ;
+      
+      } //PG loop on the point to be removed
+
+    return ;
+  }
 
 
 // ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
@@ -204,49 +281,29 @@ int graphs ()
   int i = 0 ; 
 
   intCont ic_350  ("results_interference.350.root", 350) ;      
-  ic_350.setsigGraphs (tg_sig_par, i++) ;
+  ic_350.setsigGraphs (tg_sig_par, i) ;
   ic_350.setsAiGraphs (tg_sAi_par, i++) ;
   intCont ic_500  ("results_interference.500.root", 500) ;      
-  ic_500.setsigGraphs (tg_sig_par, i++) ;  
+  ic_500.setsigGraphs (tg_sig_par, i) ;  
   ic_500.setsAiGraphs (tg_sAi_par, i++) ;  
   intCont ic_650  ("results_interference.650.root", 650) ;      
-  ic_650.setsigGraphs (tg_sig_par, i++) ;  
+  ic_650.setsigGraphs (tg_sig_par, i) ;  
   ic_650.setsAiGraphs (tg_sAi_par, i++) ;  
   intCont ic_800  ("results_interference.800.root", 800) ;      
-  ic_800.setsigGraphs (tg_sig_par, i++) ;  
+  ic_800.setsigGraphs (tg_sig_par, i) ;  
   ic_800.setsAiGraphs (tg_sAi_par, i++) ;  
   intCont ic_1000 ("results_interference.1000.root", 1000) ;   
-  ic_1000.setsigGraphs (tg_sig_par, i++) ;   
+  ic_1000.setsigGraphs (tg_sig_par, i) ;   
   ic_1000.setsAiGraphs (tg_sAi_par, i++) ;   
 
   //PG plot the interpolation for the signal
   //PG ---- ---- ---- ---- ---- ---- ---- ----
+  showInterpolation (tg_sig_par, "sig") ;
+  showInterpolation (tg_sAi_par, "sAi") ;
+
   testInterpolation (tg_sig_par, "sig") ;
   testInterpolation (tg_sAi_par, "sAi") ;
 
-//  TCanvas * c_merge = new TCanvas () ;
-//  bkg = (TH1F *) c_merge->DrawFrame (200, 0.0000001, 1500, 0.002) ;
-//  c_merge->SetLogy () ;
-//  bkg->GetXaxis ()->SetTitle ("m_{WW}") ;
-//  bkg->GetYaxis ()->SetTitle ("signal") ;
-//
-//  TGraph * log_tg_sig_par0 = makeLog (tg_sig_par[0]) ;
-//
-//  //PG loop on candidate masses
-//  for (double mass = 300 ; mass < 1100 ; mass += 25)
-//    {
-//      TF1 * func = new TF1 ("func",crystalBallLowHigh, 200, 2000, 7) ;
-//      func->SetParameter (0, TMath::Exp (log_tg_sig_par0->Eval (mass))) ;
-//      for (int iPar = 1 ; iPar < 7 ; ++iPar)
-//        func->SetParameter (iPar, tg_sig_par[iPar]->Eval (mass)) ;
-//      func->SetLineWidth (1) ;
-//      func->SetNpx (10000) ;
-//      func->Draw ("same") ;
-//    } //PG loop on candidate masses
-//
-//  c_merge->Print ("signal_interpol.pdf", "pdf") ;
-//  c_merge->SetLogy (0) ;
-//  c_merge->Print ("signal_interpol_lin.pdf", "pdf") ;
 
   return 0 ;  
 
