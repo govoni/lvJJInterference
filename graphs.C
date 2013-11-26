@@ -199,7 +199,6 @@ void showInterpolation (TGraph ** tg_sample_par, TString sample)
 
 void testInterpolation (TGraph ** tg_sample_par, TString sample)
   {
-
     //PG testing sets for the test
     TGraph ** tg_test_par = new TGraph * [7] ; // [parameter][mass]
     for (int k = 0 ; k < 7 ; ++k) tg_test_par[k] = new TGraph (4) ;
@@ -261,6 +260,23 @@ void testInterpolation (TGraph ** tg_sample_par, TString sample)
   }
 
 
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+void drawGraphs (TGraph ** tg_sample_par, TString sample)
+  {
+    TCanvas * c_sample_par = new TCanvas ("c_sample_par", "c_sample_par", 4000, 600) ;
+    c_sample_par->Divide (4,2) ;
+    for (int i = 0 ; i < 7 ; ++i)
+      {
+        c_sample_par->cd (i+1) ; 
+        tg_sample_par[i]->Draw ("AL*") ;
+      }
+    c_sample_par->Print (TString ("params_") + sample + TString (".pdf"), "pdf") ;
+    return ;
+  }
+
+
 // ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
 // ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
 
@@ -298,6 +314,9 @@ int graphs ()
 
   //PG plot the interpolation for the signal
   //PG ---- ---- ---- ---- ---- ---- ---- ----
+  drawGraphs (tg_sig_par, "sig") ;
+  drawGraphs (tg_sAi_par, "sAi") ;
+
   showInterpolation (tg_sig_par, "sig") ;
   showInterpolation (tg_sAi_par, "sAi") ;
 
