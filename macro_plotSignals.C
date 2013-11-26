@@ -374,14 +374,29 @@ int macro_plotSignals ()
   TF1 * expo_3 = new TF1 ("expo_3","TMath::Exp ([0] + [2] * (x - [1]) + [3] * (x - [1]) * (x - [1]) + [4] * (x - [1]) * (x - [1]) * (x - [1]))", 200, 2000) ;
   expo_3->SetLineColor (kBlue + 1) ;
   expo_3->SetLineWidth (1) ;
-  expo_3->SetParameter (0, 4.31606) ;
-  expo_3->SetParameter (1, -4.36118) ;
-  expo_3->SetParameter (2, -0.0470148) ;
-  expo_3->SetParameter (3, 5.08165e-05) ;
-  expo_3->SetParameter (4, -2.23425e-08) ;
+  expo_3->SetParameter (0, 2.01254) ;
+  expo_3->SetParameter (1, -3.59558) ;
+  expo_3->SetParameter (2, -0.0393226) ;
+  expo_3->SetParameter (3, 3.85085e-05) ;
+  expo_3->SetParameter (4, -1.56575e-08) ;
+  TF1 * fit_sig_par1 = new TF1 ("fit_sig_par1","pol2", 200, 2000) ;
+  fit_sig_par1->SetLineColor (kBlue + 1) ;
+  fit_sig_par1->SetLineWidth (1) ;
+  fit_sig_par1->SetParameter (0, 0.184306) ;
+  fit_sig_par1->SetParameter (1, 0.976923) ;
+  fit_sig_par1->SetParameter (2, 6.65802e-05) ;
+  TF1 * fit_sig_par2 = new TF1 ("fit_sig_par2","pol2", 200, 2000) ;
+  fit_sig_par2->SetLineColor (kBlue + 1) ;
+  fit_sig_par2->SetLineWidth (1) ;
+  fit_sig_par2->SetParameter (0, 57.5301) ;
+  fit_sig_par2->SetParameter (1, -0.296499) ;
+  fit_sig_par2->SetParameter (2, 0.000466141) ;
 
   bkg->Draw () ;
   c_merge->SetLogy (1) ;
+
+  //PG only the first parameter from the fit
+  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
   for (double mass = 300 ; mass < 1100 ; mass += 25)
     {
@@ -418,9 +433,98 @@ int macro_plotSignals ()
   
   leg->Draw () ;
   l_leftLim->Draw ("same") ;
-  c_merge->Print ("signal_hybrid.pdf", "pdf") ;
+  c_merge->SetLogy (1) ;
+  c_merge->Print ("signal_hybrid1_log.pdf", "pdf") ;
   c_merge->SetLogy (0) ;
-  c_merge->Print ("signal_hybrid_lin.pdf", "pdf") ;
+  c_merge->Print ("signal_hybrid1_lin.pdf", "pdf") ;
+  
+  //PG all parameters from linear interpolation
+  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+  bkg->Draw () ;
+  for (double mass = 300 ; mass < 1100 ; mass += 25)
+    {
+      TF1 * func = new TF1 ("func",crystalBallLowHigh, 200, 2000, 7) ;
+      double params[7] = {tg_sig_par0->Eval (mass), tg_sig_par1->Eval (mass), tg_sig_par2->Eval (mass), 
+                          tg_sig_par3->Eval (mass), tg_sig_par4->Eval (mass), tg_sig_par5->Eval (mass), 
+                          tg_sig_par6->Eval (mass)} ;
+      func->SetParameters (params) ;
+      func->SetLineWidth (1) ;
+      func->SetNpx (10000) ;
+      if (int (mass) % 100 == 0) 
+        {
+          func->SetLineColor (kRed) ;
+        }  
+      else
+        {
+          func->SetLineColor (kGray + 2) ;
+        }  
+      if (mass == 350 ||
+          mass == 500 ||
+          mass == 650 ||
+          mass == 800 ||
+          mass == 1000)          
+        {  
+          func->SetLineColor (kBlue) ;
+        }
+      func->Draw ("same") ;
+    }
+  func_sig_350->Draw ("same") ;
+  func_sig_500->Draw ("same") ;
+  func_sig_650->Draw ("same") ;
+  func_sig_800->Draw ("same") ;
+  func_sig_1000->Draw ("same") ;
+  
+  leg->Draw () ;
+  l_leftLim->Draw ("same") ;
+  c_merge->SetLogy (1) ;
+  c_merge->Print ("signal_linear_log.pdf", "pdf") ;
+  c_merge->SetLogy (0) ;
+  c_merge->Print ("signal_linear_lin.pdf", "pdf") ;
+  
+  //PG the first three parameters from the fit
+  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+  bkg->Draw () ;
+  for (double mass = 300 ; mass < 1100 ; mass += 25)
+    {
+      TF1 * func = new TF1 ("func",crystalBallLowHigh, 200, 2000, 7) ;
+      double params[7] = {expo_3->Eval (mass), fit_sig_par1->Eval (mass), fit_sig_par2->Eval (mass), 
+                          tg_sig_par3->Eval (mass), tg_sig_par4->Eval (mass), tg_sig_par5->Eval (mass), 
+                          tg_sig_par6->Eval (mass)} ;
+      func->SetParameters (params) ;
+      func->SetLineWidth (1) ;
+      func->SetNpx (10000) ;
+      if (int (mass) % 100 == 0) 
+        {
+          func->SetLineColor (kRed) ;
+        }  
+      else
+        {
+          func->SetLineColor (kGray + 2) ;
+        }  
+      if (mass == 350 ||
+          mass == 500 ||
+          mass == 650 ||
+          mass == 800 ||
+          mass == 1000)          
+        {  
+          func->SetLineColor (kBlue) ;
+        }
+      func->Draw ("same") ;
+    }
+  func_sig_350->Draw ("same") ;
+  func_sig_500->Draw ("same") ;
+  func_sig_650->Draw ("same") ;
+  func_sig_800->Draw ("same") ;
+  func_sig_1000->Draw ("same") ;
+  
+  leg->Draw () ;
+  l_leftLim->Draw ("same") ;
+  c_merge->SetLogy (1) ;
+  c_merge->Print ("signal_hybrid3_log.pdf", "pdf") ;
+  c_merge->SetLogy (0) ;
+  c_merge->Print ("signal_hybrid3_lin.pdf", "pdf") ;
   
 
 }
