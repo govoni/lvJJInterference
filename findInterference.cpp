@@ -284,7 +284,8 @@ int main (int argc, char ** argv)
 
   if (argc < 3) 
     {
-      cout << "usage " << argv[0] << " mass datafile [events]" << endl ;
+      cout << "usage " << argv[0] << " mass datafile [scale [events]]" << endl ;
+      cout << "scale = 1, 0.5, 2, default is 1" << endl ;
       exit (1) ;
     }
 
@@ -316,10 +317,16 @@ int main (int argc, char ** argv)
     }
   inputstream.close () ;
   
-  int maxEventsPerSample = -1 ;
-  if (argc == 4)
+  double multiplyScale = 1. ;
+  if (argc >= 4)
     {
-      int dummy = atoi (argv[3]) ;
+      multiplyScale = atof (argv[3]) ;
+    }
+
+  int maxEventsPerSample = -1 ;
+  if (argc == 5)
+    {
+      int dummy = atoi (argv[4]) ;
       if (dummy > 0) maxEventsPerSample = dummy ;
     }
     
@@ -348,17 +355,18 @@ int main (int argc, char ** argv)
 
   //PG messages
   
-  cout << "\nworking with mass : " << mass << endl ;
-  cout << "signal  :\t" << filename_mg << endl ;
-  cout << "bkg     :\t" << filename_phbkg << endl ;
-  cout << "S + bkg :\t" << filename_phbkgsig << "\n\n" ;
+  cout << "\nworking with mass   :\t" << mass << endl ;
+  cout << "signal                :\t" << filename_mg << endl ;
+  cout << "bkg                   :\t" << filename_phbkg << endl ;
+  cout << "S + bkg               :\t" << filename_phbkgsig << "\n" ;
+  cout << "multiply the scale by :\t" << multiplyScale << "\n\n" ;
 
   //PG ---- madgraph ---- signal only
   
   std::ifstream ifs_mg (filename_mg.c_str ()) ;
   LHEF::Reader reader_mg (ifs_mg) ;
   histos H_mg ("mg", XS_mg) ;
-  double entries_mg = fillHistos (reader_mg, H_mg, XS_mg, mass, maxEventsPerSample) ;
+  double entries_mg = fillHistos (reader_mg, H_mg, XS_mg, multiplyScale * mass, maxEventsPerSample) ;
 
   cout << "madgraph events : " << entries_mg << endl ;
   
@@ -367,7 +375,7 @@ int main (int argc, char ** argv)
   std::ifstream ifs_phbkg (filename_phbkg.c_str ()) ;
   LHEF::Reader reader_phbkg (ifs_phbkg) ;
   histos H_phbkg ("phbkg", XS_phbkg) ;
-  double entries_phbkg = fillHistos (reader_phbkg, H_phbkg, XS_phbkg, mass, maxEventsPerSample) ;
+  double entries_phbkg = fillHistos (reader_phbkg, H_phbkg, XS_phbkg, multiplyScale * mass, maxEventsPerSample) ;
 
   cout << "phantom bkg events : " << entries_phbkg << endl ;
 
@@ -376,14 +384,16 @@ int main (int argc, char ** argv)
   std::ifstream ifs_phbkgsig (filename_phbkgsig.c_str ()) ;
   LHEF::Reader reader_phbkgsig (ifs_phbkgsig) ;
   histos H_phbkgsig ("phbkgsig", XS_phbkgsig) ;
-  double entries_phbkgsig = fillHistos (reader_phbkgsig, H_phbkgsig, XS_phbkgsig, mass, maxEventsPerSample) ;
+  double entries_phbkgsig = fillHistos (reader_phbkgsig, H_phbkgsig, XS_phbkgsig, multiplyScale * mass, maxEventsPerSample) ;
 
   cout << "phantom bkg+sig events : " << entries_phbkgsig << endl ;
 
   //PG saving the histograms
 
   TString name = "findInterference." ;
-  name += mass ; 
+  name += mass ;
+  name += "." ;
+  name += multiplyScale ;
   name += ".root" ;
   TFile f (name, "recreate") ;
   H_phbkgsig.save (f) ;
