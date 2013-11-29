@@ -1,4 +1,4 @@
-// c++ -o testCorrection `root-config --glibs --cflags`  -lGenVector -lm testCorrection.cpp
+// c++ -o testCorrection `root-config --glibs --cflags` `lhapdf-config --cppflags  --ldflags`  -lGenVector -lm testCorrection.cpp
 
 
 #include "LHEF.h"
@@ -86,10 +86,8 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
 
       if (events % 10000 == 0) cout << "reading " << events << " event" << endl ;
           
-      vector<lorentzVector> v_f_Ws ;
+      vector<lorentzVector> v_f_Hs ;
       vector<lorentzVector> v_f_quarks ;
-      vector<lorentzVector> v_f_leptons ;
-      vector<lorentzVector> v_f_neutrinos ;
       
       double x[2] = {0., 0.} ;
       int flavour[2] = {0, 0} ;
@@ -99,22 +97,14 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
         {
           lorentzVector dummy = buildLP (reader.hepeup, iPart) ;
 
-           // incoming particles        
+           // incoming particles   
+           int iInc = 0 ;     
            if (reader.hepeup.ISTUP.at (iPart) == -1) 
              {
-               x[iPart] = dummy.P () / 4000. ;
-               flavour[iPart] = reader.hepeup.IDUP.at (iPart) ;
+               x[iInc] = dummy.P () / 4000. ;
+               flavour[iInc++] = reader.hepeup.IDUP.at (iPart) ;
              } // incoming particles         
 
-          // intermediate particles          
-          if (reader.hepeup.ISTUP.at (iPart) == 2)
-            {
-              if (abs (reader.hepeup.IDUP.at (iPart)) == 24) 
-                {
-                  v_f_Ws.push_back (dummy) ;
-                }              
-            } // intermediate particles
-            
           // outgoing particles          
           if (reader.hepeup.ISTUP.at (iPart) == 1)
             {
@@ -123,17 +113,9 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
              {
                v_f_quarks.push_back (dummy) ;        
              } // quarks
-           else if (abs (reader.hepeup.IDUP.at (iPart)) == 11 ||
-                    abs (reader.hepeup.IDUP.at (iPart)) == 13 ||
-                    abs (reader.hepeup.IDUP.at (iPart)) == 15)
+           else if (abs (reader.hepeup.IDUP.at (iPart)) == 25)
              {
-               v_f_leptons.push_back (dummy) ;
-             }
-           else if (abs (reader.hepeup.IDUP.at (iPart)) == 12 ||
-                    abs (reader.hepeup.IDUP.at (iPart)) == 14 ||
-                    abs (reader.hepeup.IDUP.at (iPart)) == 16)
-             {
-               v_f_neutrinos.push_back (dummy) ;        
+               v_f_Hs.push_back (dummy) ;
              }
          } // outgoing particles
        } // loop over particles in the event
@@ -141,26 +123,17 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
 //      if (totalCount < 10) cout << "PARTICLES " <<  v_f_leptons.size () << "\t" << v_f_neutrinos.size () << "\t" << v_f_quarks.size () << "\n" ;
 
       double weight = 1. ;
-//      float scale = reader.hepeup.SCALUP ;
-//      if (referenceScale != 0 )
-//        weight = LHAPDF::xfx (x[0], referenceScale, flavour[0]) * LHAPDF::xfx (x[1], referenceScale, flavour[1]) /
-//                 (LHAPDF::xfx (x[0], scale, flavour[0]) * LHAPDF::xfx (x[1], scale, flavour[1])) ;
       totalCount += weight ;
 
       int warnNum = 0 ;
-      if (v_f_quarks.size () < 4)
+      if (v_f_quarks.size () < 2)
         {
           cout << "warning, not enough quarks" << endl ;
           ++warnNum ;
         }
-      if (v_f_leptons.size () < 1)
+      if (v_f_Hs.size () < 1)
         {
-          cout << "warning, not enough leptons" << endl ;
-          ++warnNum ;
-        }
-      if (v_f_neutrinos.size () < 1)
-        {
-          cout << "warning, not enough neutrinos" << endl ;
+          cout << "warning, not enough Higgs bosons" << endl ;
           ++warnNum ;
         }
       if (warnNum > 0) continue ;
@@ -169,65 +142,19 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
       //PG apply all the production cuts from phantom and madgraph to the sample
       //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
       
-      if (v_f_leptons.at (0).Pt () < 20) continue ;
-      if (v_f_leptons.at (0).E () < 20) continue ;
-      if (fabs (v_f_leptons.at (0).Eta ()) > 3) continue ;
-      if (fabs (v_f_neutrinos.at (0).Pt ()) < 20) continue ;
       int cont = 0 ;
-      for (int i = 0 ; i < 4 ; ++i) 
+      for (int i = 0 ; i < 2 ; ++i) 
         if (v_f_quarks.at (i).Pt () > 20 && 
             v_f_quarks.at (i).E () > 20 && 
             fabs (v_f_quarks.at (i).Eta ()) < 6.5) cont += 1 ;
-      if (cont < 4) continue ;
+      if (cont < 2) continue ;
       
       pair<int, int> detaIndices = findPairWithLargestDeta (v_f_quarks) ;
       if (v_f_quarks.at (detaIndices.second).Eta () - v_f_quarks.at (detaIndices.first).Eta () < 2) continue ;
       lorentzVector largestPair = v_f_quarks.at (detaIndices.second) + v_f_quarks.at (detaIndices.first) ;
       if (largestPair.M () < 100) continue ; //PG selection applied in phantom
 
-      cont = 0 ;
-      for (int iJ = 0 ; iJ < 4 ; ++iJ)
-        for (int iJ2 = iJ + 1 ; iJ2 < 4 ; ++iJ2)
-          {
-//            if (v_f_quarks.at (iJ).DeltaR (v_f_quarks.at (iJ2)) < 0.4) 
-//              {
-//                cont = 1 ;
-//                break ;
-//              }
-            lorentzVector thisPair = v_f_quarks.at (iJ) + v_f_quarks.at (iJ2) ;
-            if (thisPair.M () < 30)  
-              {
-                cont = 1 ;
-                break ;
-              }
-          }
-      if (cont == 1) continue ;
-
-      cont = 0 ;
-      for (int iJ = 0 ; iJ < 4 ; ++iJ)
-        {
-          if (deltaR2<lorentzVector> (v_f_quarks.at (iJ), v_f_leptons.at (0)) < 0.16) cont = 1 ;
-        }
-      if (cont == 1) continue ;
-
-      //PG the first two are the VBF jets, the following ones the W jets
-//      sort (v_f_quarks.rbegin (), v_f_quarks.rend (), ptsort ()) ;  
-      
-//      pair<int, int> Wpair (2, 3) ;
-      pair<int, int> Wpair = findPairWithWMass (v_f_quarks) ;
-
-      if (Wpair.first > 3 || Wpair.second > 3)
-        {
-          cout << "warning, wrong quarks in W determination\n" ;
-        }
-
-      lorentzVector total = (v_f_leptons.at (0) + v_f_neutrinos.at (0)) + 
-                             (v_f_quarks.at (Wpair.first) + v_f_quarks.at (Wpair.second)) ;
-
-      //PG the scale:
-//      Histos.m_h_scale->Fill (Double_t (scale)) ;
-
-      Histos.m_h_MWW->Fill (total.M (), weight) ;
+      Histos.m_h_MWW->Fill (v_f_Hs[0].M (), weight) ;
       ++events ;
       if (max > 0 && max < events) 
         {
@@ -348,6 +275,9 @@ int main (int argc, char ** argv)
   LHEF::Reader reader_sig (ifs_sig) ;
   histos H_sig ("mg", XS_sig) ;
   double entries_sig = fillHistos (reader_sig, H_sig, XS_sig, mass) ;
+  TFile outfile ("testCorrection.root", "recreate") ;
+  H_sig.save (outfile) ;
+  outfile.Close () ;
 
   cout << "signal events : " << entries_sig << endl ;
 
