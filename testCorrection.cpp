@@ -207,50 +207,6 @@ struct intCont
 } ;
 
 
-// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-
-
-struct corrections
-{
-  TGraph ** tg_sig_par ;
-  TGraph ** tg_sAi_par ;
-
-  string m_path ;
-  corrections (string path) : m_path (path)
-    {
-      tg_sig_par = new TGraph * [7] ; // [parameter][mass]
-      tg_sAi_par = new TGraph * [7] ;
-      for (int k = 0 ; k < 7 ; ++k) tg_sig_par[k] = new TGraph (5) ;
-      for (int k = 0 ; k < 7 ; ++k) tg_sAi_par[k] = new TGraph (5) ;
-
-      //PG fill the graphs from the input files
-      //PG ---- ---- ---- ---- ---- ---- ---- ----
-    
-      int i = 0 ; 
-    
-      intCont ic_350  (m_path + string ("/results_interference.350.root"), 350) ;      
-      ic_350.setsigGraphs (tg_sig_par, i) ;
-      ic_350.setsAiGraphs (tg_sAi_par, i++) ;
-      intCont ic_500  (m_path + string ("/results_interference.500.root"), 500) ;      
-      ic_500.setsigGraphs (tg_sig_par, i) ;  
-      ic_500.setsAiGraphs (tg_sAi_par, i++) ;  
-      intCont ic_650  (m_path + string ("/results_interference.650.root"), 650) ;      
-      ic_650.setsigGraphs (tg_sig_par, i) ;  
-      ic_650.setsAiGraphs (tg_sAi_par, i++) ;  
-      intCont ic_800  (m_path + string ("/results_interference.800.root"), 800) ;      
-      ic_800.setsigGraphs (tg_sig_par, i) ;  
-      ic_800.setsAiGraphs (tg_sAi_par, i++) ;  
-      intCont ic_1000 (m_path + string ("/results_interference.1000.root"), 1000) ;   
-      ic_1000.setsigGraphs (tg_sig_par, i) ;   
-      ic_1000.setsAiGraphs (tg_sAi_par, i++) ;   
-
-
-    }
-
-
-} ;
-
-
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
@@ -281,9 +237,5 @@ int main (int argc, char ** argv)
 
   cout << "signal events : " << entries_sig << endl ;
 
-  //PG read the correction factors
-  corrections corrTool (correctionsFolder) ;
-  
-
-  return 0 ;
+s  return 0 ;
 }
