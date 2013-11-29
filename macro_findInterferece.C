@@ -316,6 +316,179 @@ double diff_crystalBallLowHigh (double* x, double* par)
 }
 
 
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+TF1 * FIT_madgraph_signal (TH1F * h_MWW_mg, float mass, float rangeScale, TString suffix, bool useLikelihood = false)
+{  
+  TCanvas * c4_mg = new TCanvas ("c4_mg", "c4_mg") ;
+
+  //PG first fit: get the width for the second fit
+  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+ 
+  TF1 * gauss_mg = new TF1 ("gauss_mg", "gaus", 0, 2000) ;
+  gauss_mg->SetNpx (10000) ;
+  gauss_mg->SetLineWidth (1) ;
+  gauss_mg->SetLineColor (kGray + 2) ;
+  h_MWW_mg->Fit ("gauss_mg", "Q+", "", mass - 1. * h_MWW_mg->GetRMS () , mass + 1. * h_MWW_mg->GetRMS ()) ;
+  
+  //PG second fit: first with chisq, if requested with likelihood also
+  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+ 
+  TF1 * func_mg_1 = new TF1 ("func_mg_1", crystalBallLowHigh, 0, 2000, 7) ;
+  func_mg_1->SetNpx (10000) ;
+  func_mg_1->SetLineWidth (1) ;
+  func_mg_1->SetLineColor (kBlue + 1) ;
+
+  setParNamesdoubleGausCrystalBallLowHigh (func_mg_1) ;
+
+  func_mg_1->SetParameter (0, h_MWW_mg->GetBinContent (h_MWW_mg->GetMaximumBin ())) ;  // multiplicative scale
+  func_mg_1->SetParameter (1, mass) ;                                                  // mean
+  func_mg_1->SetParameter (2, gauss_mg->GetParameter (2)) ;                            // gaussian sigma
+  func_mg_1->SetParLimits (2, 0.01 * h_MWW_mg->GetRMS (), 20 * h_MWW_mg->GetRMS ()) ;
+  func_mg_1->SetParameter (3, 1.5) ;                                                   // right junction
+  func_mg_1->SetParameter (4, 2) ;                                                     // right power law order
+  func_mg_1->SetParameter (5, 0.95) ;                                                  // left junction
+  func_mg_1->SetParameter (6, 2.38) ;                                                  // left power law order
+
+  //PG set the range of the fit
+  int sign = 1 ;
+  if (mass < 400) sign = -2 ;
+  if (mass > 700) sign = -1.5 ;
+  if (mass > 850) sign = -1. ;
+  cout << "-------------------\nFITTING THE MADGRAPH SIGNAL\n\n-------------------\n" ;
+  TFitResultPtr result = h_MWW_mg->Fit ("func_mg_1", "+", "", 0.5 * mass + sign * 50, 2 * mass) ;
+  if (useLikelihood && mass < 800)
+    {
+      cout << "-------------------\nFITTING THE MADGRAPH SIGNAL W/ LIKELIHOOD\n\n-------------------\n" ;
+      func_mg_1->SetParameters (func_mg_1->GetParameters ()) ; //PG not sure this is necessary
+      func_mg_1->SetLineColor (kBlue + 3) ;
+      h_MWW_mg->Fit ("func_mg_1", "+L", "", 0.5 * mass - 50, 2 * mass) ;
+    }
+
+//  TH1F * h_MWW_mg_error = h_MWW_mg->Clone ("h_MWW_mg_error") ;
+//  (TVirtualFitter::GetFitter ())->GetConfidenceIntervals (h_MWW_mg_error, 0.68) ;
+//  h_MWW_mg_error->SetMarkerSize (0) ;
+//  h_MWW_mg_error->SetFillColor (kAzure - 9) ;
+//  h_MWW_mg_error->SetFillStyle (3001) ;
+
+  //PG plotting the result
+  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+ 
+  ymax = h_MWW_mg->GetBinContent (h_MWW_mg->GetMaximumBin ()) ;
+  ymin = h_MWW_mg->GetBinContent (h_MWW_mg->GetMinimumBin ()) ;
+  if (ymin <= 0) ymin = ymax / 10000. ; 
+  TH1F * c4_mg_frame = (TH1F *) c4_mg->DrawFrame (200, 0.9 * ymin, rangeScale * mass, 1.1 * ymax) ;
+  c4_mg->SetLogy () ;
+  c4_mg_frame->SetTitle (0) ;
+  c4_mg_frame->SetStats (0) ;
+  c4_mg_frame->GetXaxis ()->SetTitle ("m_{WW} (GeV)") ;
+//  h_MWW_mg_error->Draw ("same") ;
+  h_MWW_mg->Draw ("EPsame") ;
+
+  //PG draw the junction points in the fit image
+  
+  double rightTh = fabs (func_mg_1->GetParameter (3)) * func_mg_1->GetParameter (2) + func_mg_1->GetParameter (1) ;
+  double leftTh  = -1 * fabs (func_mg_1->GetParameter (5)) * func_mg_1->GetParameter (2) + func_mg_1->GetParameter (1) ;
+
+  TLine * l_rightTh = new TLine (rightTh, 0.9 * ymin, rightTh, 1.1 * ymax) ;
+  l_rightTh->SetLineColor (kRed) ;
+  l_rightTh->Draw ("same") ;
+  TLine * l_leftTh = new TLine (leftTh, 0.9 * ymin, leftTh, 1.1 * ymax) ;
+  l_leftTh->SetLineColor (kRed) ;
+  l_leftTh->Draw ("same") ;
+
+  c4_mg->Update () ;
+  c4_mg->Print (TString ("signals_mg_log") + suffix, "pdf") ;
+
+  c4_mg->SetLogy (0) ;
+  c4_mg->Print (TString ("signals_mg_lin") + suffix, "pdf") ;
+
+  return func_mg_1 ;
+}
+
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+TF1 * FIT_phantom_signal (TH1F * diff, float mass, float rangeScale, TString suffix, bool useLikelihood = false)
+{  
+ TCanvas * c4_ph = new TCanvas ("c4_ph", "c4_ph") ;
+
+  //PG first fit: get the width for the second fit
+  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+ 
+  TF1 * gauss_ph = new TF1 ("gauss_ph", "gaus", 0, 2000) ;
+  gauss_ph->SetNpx (10000) ;
+  gauss_ph->SetLineWidth (1) ;
+  gauss_ph->SetLineColor (kGray + 2) ;
+  double fact = 1. ;
+  diff->Fit ("gauss_ph", "Q+", "", mass - fact * diff->GetRMS () , mass + fact * diff->GetRMS ()) ;
+
+  //PG second fit: first with chisq, if requested with likelihood also
+  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+ 
+  TF1 * func_ph_1 = new TF1 ("func_ph_1", crystalBallLowHigh, 0, 2000, 7) ;
+  func_ph_1->SetNpx (10000) ;
+  func_ph_1->SetLineWidth (1) ;
+  func_ph_1->SetLineColor (kRed + 1) ;
+  
+  setParNamesdoubleGausCrystalBallLowHigh (func_ph_1) ;
+
+  func_ph_1->SetParameter (0, diff->Integral ()) ;              // multiplicative scale
+  func_ph_1->SetParameter (1, mass) ;                           // mean
+  func_ph_1->SetParameter (2, 2 * gauss_ph->GetParameter (2)) ; // gaussian sigma
+  func_ph_1->SetParLimits (2, 0., mass) ;
+  func_ph_1->SetParameter (3, 1) ;                              // right junction
+  func_ph_1->SetParLimits (3, 0.1, 5) ;                         // right junction
+  func_ph_1->FixParameter (4, 3) ;                              // right power law order            //PG NB THIS IS FIXED
+//  func_ph_1->SetParLimits (4, 0.1, 3) ;                         // left junction
+  func_ph_1->SetParameter (5, 1) ;                              // left junction
+  func_ph_1->FixParameter (5, 1) ;                              // left junction                    //PG NB THIS IS FIXED
+//  func_ph_1->SetParLimits (5, 0.1, 5) ;                         // left junction
+  func_ph_1->FixParameter (6, 3) ;                              // left power law order             //PG NB THIS IS FIXED
+//  func_ph_1->SetParLimits (6, 0.1, 3) ;                         // left junction
+
+  cout << "-------------------\nFITTING THE PHANTOM SIGNAL\n\n-------------------\n" ;
+  diff->Fit ("func_ph_1", "", "", 0.5 * mass - 50, 2 * mass) ;
+  if (useLikelihood)
+    {
+      cout << "-------------------\nFITTING THE PHANTOM SIGNAL W/ LIKELIHOOD\n\n-------------------\n" ;
+      func_ph_1->SetParameters (func_ph_1->GetParameters ()) ;
+      func_ph_1->SetLineColor (kRed + 3) ;
+      diff->Fit ("func_ph_1", "+L", "", 0.5 * mass - 50, 1.5 * mass) ;
+    }
+    
+  float ymax = diff->GetBinContent (diff->GetMaximumBin ()) ;
+  ymax = max (ymax, func_ph_1->GetMaximum ()) ;
+  float ymin = diff->GetBinContent (diff->GetMinimumBin ()) ;
+  ymin = max (ymin, -0.1 * ymax) ;
+  if (ymin <= 0) ymin = ymax / 10000. ; 
+  TH1F * c4_ph_frame = (TH1F *) c4_ph->DrawFrame (200, 0.9 * ymin, rangeScale * mass, 1.1 * ymax) ;
+  c4_ph_frame->SetTitle (0) ;
+  c4_ph_frame->SetStats (0) ;
+  c4_ph_frame->GetXaxis ()->SetTitle ("m_{WW} (GeV)") ;
+  gauss_ph->Draw ("same") ;
+  diff->Draw ("EPsame") ;
+
+  double rightTh_ph = fabs (func_ph_1->GetParameter (3)) * fabs (func_ph_1->GetParameter (2)) + func_ph_1->GetParameter (1) ;
+  double leftTh_ph  = -1 * fabs (func_ph_1->GetParameter (5)) * fabs (func_ph_1->GetParameter (2)) + func_ph_1->GetParameter (1) ;
+
+  TLine * l_rightTh_ph = new TLine (rightTh_ph, 0.9 * ymin, rightTh_ph, 1.1 * ymax) ;
+  l_rightTh_ph->SetLineColor (kRed) ;
+  l_rightTh_ph->Draw ("same") ;
+  TLine * l_leftTh_ph = new TLine (leftTh_ph, 0.9 * ymin, leftTh_ph, 1.1 * ymax) ;
+  l_leftTh_ph->SetLineColor (kRed) ;
+  l_leftTh_ph->Draw ("same") ;
+
+  c4_ph->Print (TString ("signals_ph_lin") + suffix, "pdf") ;
+  c4_ph->SetLogy () ;
+  c4_ph->Print (TString ("signals_ph_log") + suffix, "pdf") ;
+
+  return func_ph_1 ;
+}
+
+
 // ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
 // ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
 
@@ -415,9 +588,9 @@ int macro_findInterferece (string filename, double mass, int initialRebin = 1)
   //PG plotting
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ----
 
-  TString suffix = "." ; 
-  suffix += mass ;
-  suffix += ".pdf" ;
+  TString suffix (filename) ;
+  suffix.ReplaceAll ("findInterference.", "") ;
+  suffix.ReplaceAll ("root", "pdf") ;
   
   //PG initial spectra ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
@@ -445,160 +618,12 @@ int macro_findInterferece (string filename, double mass, int initialRebin = 1)
   c1->Print (TString ("spectra") + suffix, "pdf") ;
   
   //PG S only ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-  
-  TCanvas * c4_mg = new TCanvas ("c4_mg", "c4_mg") ;
 
-  TF1 * gauss_mg = new TF1 ("gauss_mg", "gaus", 0, 2000) ;
-  gauss_mg->SetLineWidth (1) ;
-  gauss_mg->SetLineColor (kGray + 2) ;
-  h_MWW_mg->Fit ("gauss_mg", "Q+", "", mass - 1. * h_MWW_mg->GetRMS () , mass + 1. * h_MWW_mg->GetRMS ()) ;
-//  h_MWW_mg->Fit ("gauss_mg", "Q+", "", mass - 2. * h_MWW_mg->GetBinWidth (1) , mass + 1. * h_MWW_mg->GetBinWidth (1)) ;
-//  float sigma_diff = 10. ;
-//  do {
-//      sigma_diff = gauss_mg->GetParameter (2) ;
-//      h_MWW_mg->Fit ("gauss_mg", "Q+", "", mass - 1. * gauss_mg->GetParameter (2), mass + 1. * gauss_mg->GetParameter (2)) ;
-//      sigma_diff -= gauss_mg->GetParameter (2) ;
-//    } while (fabs (sigma_diff) > 0.2) ;
-
-  TF1 * func_mg_1 = new TF1 ("func_mg_1", crystalBallLowHigh, 0, 2000, 7) ;
-  func_mg_1->SetNpx (10000) ;
-  func_mg_1->SetLineWidth (1) ;
-  func_mg_1->SetLineColor (kBlue + 1) ;
-
-  setParNamesdoubleGausCrystalBallLowHigh (func_mg_1) ;
-  cout << "PREFIT RMS : " << h_MWW_mg->GetRMS () << endl ;
-
-  func_mg_1->SetParameter (0, h_MWW_mg->GetBinContent (h_MWW_mg->GetMaximumBin ())) ;  // multiplicative scale
-  func_mg_1->SetParameter (1, mass) ;                                                  // mean
-  func_mg_1->SetParameter (2, gauss_mg->GetParameter (2)) ;                            // gaussian sigma
-  func_mg_1->SetParLimits (2, 0.01 * h_MWW_mg->GetRMS (), 20 * h_MWW_mg->GetRMS ()) ;
-  func_mg_1->SetParameter (3, 1.5) ;                                                   // right junction
-  func_mg_1->SetParameter (4, 2) ;                                                     // right power law order
-  func_mg_1->SetParameter (5, 0.95) ;                                                  // left junction
-//  func_mg_1->SetParameter (5, 0.95) ;                                                  // left junction
-  func_mg_1->SetParameter (6, 2.38) ;                                                  // left power law order
-
-  int sign = 1 ;
-  if (mass < 400) sign = -2 ;
-  cout << "-------------------\nFITTING THE MADGRAPH SIGNAL\n\n-------------------\n" ;
-  h_MWW_mg->Fit ("func_mg_1", "+", "", 0.5 * mass + sign * 50, 2 * mass) ;
-  cout << "CHI2 / NDOF = " << func_mg_1->GetChisquare () /func_mg_1->GetNDF () << endl ;
-  func_mg_1->SetParameters (func_mg_1->GetParameters ()) ;
-  func_mg_1->SetLineColor (kBlue + 3) ;
-  cout << "-------------------\nFITTING THE MADGRAPH SIGNAL W/ LIKELIHOOD\n\n-------------------\n" ;
-  h_MWW_mg->Fit ("func_mg_1", "+L", "", 0.5 * mass - 50, 2 * mass) ;
-  cout << "CHI2 / NDOF = " << func_mg_1->GetChisquare () /func_mg_1->GetNDF () << endl ;
-
-//  TH1F * h_MWW_mg_error = h_MWW_mg->Clone ("h_MWW_mg_error") ;
-//  (TVirtualFitter::GetFitter ())->GetConfidenceIntervals (h_MWW_mg_error, 0.68) ;
-//  h_MWW_mg_error->SetMarkerSize (0) ;
-//  h_MWW_mg_error->SetFillColor (kAzure - 9) ;
-//  h_MWW_mg_error->SetFillStyle (3001) ;
-
-  ymax = h_MWW_mg->GetBinContent (h_MWW_mg->GetMaximumBin ()) ;
-  ymin = h_MWW_mg->GetBinContent (h_MWW_mg->GetMinimumBin ()) ;
-  if (ymin <= 0) ymin = ymax / 10000. ; 
-  TH1F * c4_mg_frame = (TH1F *) c4_mg->DrawFrame (200, 0.9 * ymin, rangeScale * mass, 1.1 * ymax) ;
-  c4_mg->SetLogy () ;
-  c4_mg_frame->SetTitle (0) ;
-  c4_mg_frame->SetStats (0) ;
-  c4_mg_frame->GetXaxis ()->SetTitle ("m_{WW} (GeV)") ;
-//  h_MWW_mg_error->Draw ("same") ;
-  h_MWW_mg->Draw ("EPsame") ;
-
-  double rightTh = fabs (func_mg_1->GetParameter (3)) * func_mg_1->GetParameter (2) + func_mg_1->GetParameter (1) ;
-  cout << "MG RIGHT THRESHOLD " << rightTh << endl ;
-  double leftTh  = -1 * fabs (func_mg_1->GetParameter (5)) * func_mg_1->GetParameter (2) + func_mg_1->GetParameter (1) ;
-  cout << "MG LEFT THRESHOLD " << leftTh << endl ;
-
-  TLine * l_rightTh = new TLine (rightTh, 0.9 * ymin, rightTh, 1.1 * ymax) ;
-  l_rightTh->SetLineColor (kRed) ;
-  l_rightTh->Draw ("same") ;
-  TLine * l_leftTh = new TLine (leftTh, 0.9 * ymin, leftTh, 1.1 * ymax) ;
-  l_leftTh->SetLineColor (kRed) ;
-  l_leftTh->Draw ("same") ;
-
-  c4_mg->Update () ;
-  c4_mg->Print (TString ("signals_mg_log") + suffix, "pdf") ;
-
-  c4_mg->SetLogy (0) ;
-  c4_mg->Print (TString ("signals_mg_lin") + suffix, "pdf") ;
+  TF1 * func_mg_1 = FIT_madgraph_signal (h_MWW_mg, mass, rangeScale, suffix, true) ;
 
   //PG (SBI - B) only ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
-  TCanvas * c4_ph = new TCanvas ("c4_ph", "c4_ph") ;
-
-  TF1 * gauss = new TF1 ("gauss", "gaus", 0, 2000) ;
-  gauss->SetLineWidth (1) ;
-  gauss->SetLineColor (kGray + 2) ;
-  diff->Fit ("gauss", "Q+", "", 0.75 * mass, mass * 1.25) ;
-
-  TF1 * func_ph_1 = new TF1 ("func_ph_1", crystalBallLowHigh, 0, 2000, 7) ;
-  func_ph_1->SetNpx (10000) ;
-  func_ph_1->SetLineWidth (1) ;
-  func_ph_1->SetLineColor (kRed + 1) ;
-  
-  setParNamesdoubleGausCrystalBallLowHigh (func_ph_1) ;
-
-  func_ph_1->SetParameter (0, diff->Integral ()) ;       // multiplicative scale
-  func_ph_1->SetParameter (1, mass) ;                    // mean
-  func_ph_1->SetParameter (2, 2 * gauss->GetParameter (2)) ; // gaussian sigma
-  func_ph_1->SetParLimits (2, 0., mass) ;
-  func_ph_1->SetParameter (3, 1) ;                       // right junction
-  func_ph_1->SetParLimits (3, 0.1, 5) ;                  // right junction
-  func_ph_1->FixParameter (4, 3) ;                       // right power law order            //PG NB THIS IS FIXED
-//  func_ph_1->SetParLimits (4, 0.1, 3) ;                  // left junction
-  func_ph_1->SetParameter (5, 1) ;                       // left junction
-  func_ph_1->FixParameter (5, 1) ;                       // left junction                    //PG NB THIS IS FIXED
-//  func_ph_1->SetParLimits (5, 0.1, 5) ;                  // left junction
-  func_ph_1->FixParameter (6, 3) ;                       // left power law order             //PG NB THIS IS FIXED
-//  func_ph_1->SetParLimits (6, 0.1, 3) ;                  // left junction
-
-  cout << "-------------------\nFITTING THE PHANTOM SIGNAL\n\n-------------------\n" ;
-  diff->Fit ("func_ph_1", "", "", 0.5 * mass - 50, 2 * mass) ;
-  cout << "CHI2 / NDOF = " << func_ph_1->GetChisquare () /func_ph_1->GetNDF () << endl ;
-  func_ph_1->SetParameters (func_ph_1->GetParameters ()) ;
-  func_ph_1->SetLineColor (kRed + 3) ;
-
-  if (mass < 800)
-    {
-      cout << "-------------------\nFITTING THE PHANTOM SIGNAL W/ LIKELIHOOD\n\n-------------------\n" ;
-      diff->Fit ("func_ph_1", "+L", "", 0.5 * mass - 50, 1.5 * mass) ;
-      cout << "CHI2 / NDOF = " << func_ph_1->GetChisquare () /func_ph_1->GetNDF () << endl ;
-    }
-    
-  ymax = diff->GetBinContent (diff->GetMaximumBin ()) ;
-  ymax = max (ymax, func_ph_1->GetMaximum ()) ;
-  ymin = diff->GetBinContent (diff->GetMinimumBin ()) ;
-  ymin = max (ymin, -0.1 * ymax) ;
-  if (ymin <= 0) ymin = ymax / 10000. ; 
-  TH1F * c4_ph_frame = (TH1F *) c4_ph->DrawFrame (200, 0.9 * ymin, rangeScale * mass, 1.1 * ymax) ;
-  c4_ph_frame->SetTitle (0) ;
-  c4_ph_frame->SetStats (0) ;
-  c4_ph_frame->GetXaxis ()->SetTitle ("m_{WW} (GeV)") ;
-  diff->Draw ("EPsame") ;
-
-  cout << "SIGMA: " << func_ph_1->GetParameter (2) << endl ;
-  double rightTh_ph = fabs (func_ph_1->GetParameter (3)) * fabs (func_ph_1->GetParameter (2)) + func_ph_1->GetParameter (1) ;
-  cout << "PH RIGHT THRESHOLD " << rightTh_ph << endl ;
-  double leftTh_ph  = -1 * fabs (func_ph_1->GetParameter (5)) * fabs (func_ph_1->GetParameter (2)) + func_ph_1->GetParameter (1) ;
-  cout << "PH LEFT THRESHOLD " << leftTh_ph << endl ;
-
-  double rightSigma_ph = fabs (func_ph_1->GetParameter (2)) + func_ph_1->GetParameter (1) ;
-  TLine * l_rightSigma_ph = new TLine (rightSigma_ph, 0.9 * ymin, rightSigma_ph, 1.1 * ymax) ;
-  l_rightSigma_ph->SetLineColor (kGray + 2) ;
-  l_rightSigma_ph->Draw ("same") ;
-
-  TLine * l_rightTh_ph = new TLine (rightTh_ph, 0.9 * ymin, rightTh_ph, 1.1 * ymax) ;
-  l_rightTh_ph->SetLineColor (kRed) ;
-  l_rightTh_ph->Draw ("same") ;
-  TLine * l_leftTh_ph = new TLine (leftTh_ph, 0.9 * ymin, leftTh_ph, 1.1 * ymax) ;
-  l_leftTh_ph->SetLineColor (kRed) ;
-  l_leftTh_ph->Draw ("same") ;
-
-  c4_ph->Print (TString ("signals_ph_lin") + suffix, "pdf") ;
-  c4_ph->SetLogy () ;
-  c4_ph->Print (TString ("signals_ph_log") + suffix, "pdf") ;
+  TF1 * func_ph_1 = FIT_phantom_signal (diff, mass, rangeScale, suffix, false) ;
 
   //PG (SBI - B) - S only   i.e   INTERFERENCE FIT 
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
