@@ -20,6 +20,16 @@ double max (double uno, double due)
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
+double min (double uno, double due)
+{
+  if (uno < due) return uno ;
+  return due ;
+}
+
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
 /*** double crystall ball ***/
 double doubleGausCrystalBallLowHigh (double* x, double* par)
 {
@@ -304,6 +314,36 @@ double ratio_crystalBallLowHigh (double* x, double* par)
 }
 
 
+
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+//PG parameters of the signal-and-interference first,
+//PG parameters of the signal-only later
+double ratio_crystalBallLowHighWithRise (double* x, double* par)
+{
+  double den = crystalBallLowHigh (x, par + 9) ; // signal only
+  if (den == 0) return -1. ;
+  double num = crystalBallLowHighWithRise (x, par) ;    // signal and interference
+  return num / den ;
+}
+
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+//PG parameters of the signal-and-interference first,
+//PG parameters of the signal-only later
+double diff_crystalBallLowHighWithRise (double* x, double* par)
+{
+  return crystalBallLowHighWithRise (x, par) - crystalBallLowHigh (x, par + 9) ;
+  //PG    signal and interference                          signal only
+}
+
+
+
+
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
@@ -450,7 +490,7 @@ TF1 * FIT_phantom_signal (TH1F * diff, float mass, float rangeScale, TString suf
 //  func_ph_1->SetParLimits (6, 0.1, 3) ;                         // left junction
 
   cout << "-------------------\nFITTING THE PHANTOM SIGNAL\n\n-------------------\n" ;
-  diff->Fit ("func_ph_1", "", "", 0.5 * mass - 50, 2 * mass) ;
+  diff->Fit ("func_ph_1", "+", "", 0.5 * mass - 50, 2 * mass) ;
   if (useLikelihood)
     {
       cout << "-------------------\nFITTING THE PHANTOM SIGNAL W/ LIKELIHOOD\n\n-------------------\n" ;
@@ -489,6 +529,128 @@ TF1 * FIT_phantom_signal (TH1F * diff, float mass, float rangeScale, TString suf
 }
 
 
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+double leftRise (double * x, double * par)
+{
+//  return (-1. / (par[0] * (x[0] - 180.)) + 1) ;
+//  return (-1. / (par[0] * TMath::Sqrt (x[0] - 180.))) ;
+//  return (-1. / (    par[0] * (x[0] - 180.)    )) ;
+  return par[0] * ( 1. / (1. + TMath::Exp (-1. * par[1] * x[0]) ) - 1. )  ;
+}
+
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+double crystalBallLowHighWithRise (double* x, double* par)
+{
+  //PG the first 7 parameters are passed to the crystalBallLowHigh
+//  return TMath::Log (par[7] * (x[0] - 180.)) * crystalBallLowHigh (x, par) ;
+//  return leftRise (x, par + 7) * crystalBallLowHigh (x, par) ;
+  return leftRise (x, par + 7) + crystalBallLowHigh (x, par) ;
+}
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+TF1 * FIT_phantom_signal_2 (TH1F * diff, float mass, float rangeScale, TString suffix, bool useLikelihood = false)
+{  
+ TCanvas * c4_ph = new TCanvas ("c4_ph", "c4_ph") ;
+
+  //PG first fit: get the width for the second fit
+  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+ 
+  TF1 * gauss_ph = new TF1 ("gauss_ph", "gaus", 0, 2000) ;
+  gauss_ph->SetNpx (10000) ;
+  gauss_ph->SetLineWidth (1) ;
+  gauss_ph->SetLineColor (kGray + 2) ;
+  gauss_ph->SetParameter (1, mass) ;
+  gauss_ph->SetParameter (2, 0.5 * diff->GetRMS ()) ;
+  double fact = 1. ;
+  double span = min (fact * fabs (diff->GetRMS ()), 0.5 * mass) ;
+  diff->Fit ("gauss_ph", "+", "", mass - span , mass + span) ;
+
+  //PG preliminary fit of the left rise
+  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+  
+  TF1 * f_leftRise = new TF1 ("f_leftRise", leftRise, 181, 2000, 2) ;
+  f_leftRise->SetNpx (10000) ;
+  f_leftRise->SetLineWidth (1) ;
+  f_leftRise->SetLineColor (kOrange + 2) ;
+  f_leftRise->SetParLimits (0, 0., 10000.) ;
+  float N = (1.5 - 4) / (800. - 500.) * (mass - 500.) + 4 ;
+  float riseLimit = mass - N * gauss_ph->GetParameter (2) ;
+  diff->Fit ("f_leftRise", "+", "", 180., riseLimit) ;
+
+  //PG second fit: first with chisq, if requested with likelihood also
+  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+ 
+  TF1 * func_ph_2 = new TF1 ("func_ph_2", crystalBallLowHighWithRise, 0, 2000, 9) ;
+  func_ph_2->SetNpx (10000) ;
+  func_ph_2->SetLineWidth (1) ;
+  func_ph_2->SetLineColor (kRed + 1) ;
+  
+  setParNamesdoubleGausCrystalBallLowHigh (func_ph_2) ;
+
+  func_ph_2->SetParameter (0, diff->Integral ()) ;                //PG multiplicative scale
+  func_ph_2->SetParameter (1, mass) ;                             //PG mean
+  func_ph_2->SetParameter (2, 2 * gauss_ph->GetParameter (2)) ;   //PG gaussian sigma
+  func_ph_2->SetParLimits (2, 0., mass) ;                         
+  func_ph_2->SetParameter (3, 1) ;                                //PG right junction
+  func_ph_2->SetParLimits (3, 0.1, 5) ;                           //PG right junction
+  func_ph_2->FixParameter (4, 3) ;                                //PG right power law order            //PG NB THIS IS FIXED
+  func_ph_2->FixParameter (5, 1) ;                                //PG left junction                    //PG NB THIS IS FIXED
+  func_ph_2->FixParameter (6, 3) ;                                //PG left power law order             //PG NB THIS IS FIXED
+  func_ph_2->FixParameter (7, f_leftRise->GetParameter (0)) ;     //PG from the first fit to the rise
+  func_ph_2->FixParameter (8, f_leftRise->GetParameter (1)) ;     //PG from the first fit to the rise
+
+  cout << "-------------------\nFITTING THE PHANTOM SIGNAL with left turn on \n\n-------------------\n" ;
+//  diff->Fit ("func_ph_2", "", "", 0.5 * mass - 50, 2 * mass) ;
+  diff->Fit ("func_ph_2", "", "", 200., 2 * mass) ;
+  if (useLikelihood)
+    {
+      cout << "-------------------\nFITTING THE PHANTOM SIGNAL W/ LIKELIHOOD with left turn on\n\n-------------------\n" ;
+      func_ph_2->SetParameters (func_ph_2->GetParameters ()) ;
+      func_ph_2->SetLineColor (kRed + 3) ;
+//      diff->Fit ("func_ph_2", "L+", "", 0.5 * mass - 50, 1.5 * mass) ;
+      diff->Fit ("func_ph_2", "L+", "", 200., 1.5 * mass) ;
+    }
+    
+  float ymax = diff->GetBinContent (diff->GetMaximumBin ()) ;
+  float ymin = diff->GetBinContent (diff->GetMinimumBin ()) ;
+  TH1F * c4_ph_frame = (TH1F *) c4_ph->DrawFrame (200, 0.9 * ymin, rangeScale * mass, 1.1 * ymax) ;
+  c4_ph_frame->SetTitle (0) ;
+  c4_ph_frame->SetStats (0) ;
+  c4_ph_frame->GetXaxis ()->SetTitle ("m_{WW} (GeV)") ;
+  gauss_ph->Draw ("same") ;
+  diff->Draw ("EPsame") ;
+
+  //PG limits of the gaussian core
+  double rightTh_ph = fabs (func_ph_2->GetParameter (3)) * fabs (func_ph_2->GetParameter (2)) + func_ph_2->GetParameter (1) ;
+  double leftTh_ph  = -1 * fabs (func_ph_2->GetParameter (5)) * fabs (func_ph_2->GetParameter (2)) + func_ph_2->GetParameter (1) ;
+  TLine * l_rightTh_ph = new TLine (rightTh_ph, 0.9 * ymin, rightTh_ph, 1.1 * ymax) ;
+  l_rightTh_ph->SetLineColor (kRed) ;
+  l_rightTh_ph->Draw ("same") ;
+  TLine * l_leftTh_ph = new TLine (leftTh_ph, 0.9 * ymin, leftTh_ph, 1.1 * ymax) ;
+  l_leftTh_ph->SetLineColor (kRed) ;
+  l_leftTh_ph->Draw ("same") ;
+
+  //PG limit of the prefit for the tail
+  TLine * l_riseLimit = new TLine (riseLimit, 0.9 * ymin, riseLimit, 1.1 * ymax) ;
+  l_riseLimit->SetLineColor (kOrange + 2) ;
+  l_riseLimit->SetLineStyle (2) ;
+  gauss_ph->Draw ("same") ;
+  l_riseLimit->Draw ("same") ;
+  f_leftRise->Draw ("same") ;
+
+  c4_ph->Print (TString ("signals_ph_lin_leftTail") + suffix, "pdf") ;
+
+  return func_ph_2 ;
+}
+
+
 // ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
 // ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
 
@@ -507,7 +669,8 @@ int macro_findInterferece (string filename, double mass, int initialRebin = 1)
 
   int reBin = initialRebin ;
   if (mass > 480) reBin *= 2 ;
-  if (mass > 810) reBin *= 6 ;
+  else if (mass > 610) reBin *= 4 ;
+  else if (mass > 810) reBin *= 6 ;
   double rangeScale = 1.5 ; // for plotting purposes
   if (mass > 480) rangeScale = 2 ;
   
@@ -623,7 +786,7 @@ int macro_findInterferece (string filename, double mass, int initialRebin = 1)
 
   //PG (SBI - B) only ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
-  TF1 * func_ph_1 = FIT_phantom_signal (diff, mass, rangeScale, suffix, false) ;
+  TF1 * func_ph_1 = FIT_phantom_signal_2 (diff, mass, rangeScale, suffix, false) ;
 
   //PG (SBI - B) - S only   i.e   INTERFERENCE FIT 
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -670,10 +833,10 @@ int macro_findInterferece (string filename, double mass, int initialRebin = 1)
   c3_leg->AddEntry (delta, "(SBI - B) - S","l") ;
   
   //PG plot the result of the fits on top
-  TF1 * f_difference = new TF1 ("f_difference", diff_crystalBallLowHigh, 0, 2000, 14) ;
-  Double_t params_difference[14] ;
+  TF1 * f_difference = new TF1 ("f_difference", diff_crystalBallLowHighWithRise, 0, 2000, 16) ;
+  Double_t params_difference[16] ;
   func_ph_1->GetParameters (params_difference) ;
-  func_mg_1->GetParameters (params_difference + 7) ;
+  func_mg_1->GetParameters (params_difference + 9) ;
   f_difference->SetParameters (params_difference) ;
   f_difference->SetNpx (10000) ;
   f_difference->SetLineWidth (2) ;
@@ -692,7 +855,6 @@ int macro_findInterferece (string filename, double mass, int initialRebin = 1)
   ymin = ratio->GetBinContent (ratio->GetMinimumBin ()) ;
   if (ymin > 0) ymin *= 0.5 ;
   else          ymin *= 1.5 ;
-//  if (mass > 800 && ymin < -3 * ymax) ymin = -2 * ymax ;
   if (ymin < 0) ymin = - 0.1 ;
   TH1F * c5_frame = (TH1F *) c5->DrawFrame (200, 0., rangeScale * mass, 6.) ;
   c5_frame->SetTitle (0) ;
@@ -701,7 +863,7 @@ int macro_findInterferece (string filename, double mass, int initialRebin = 1)
   
   ratio->Draw ("hist same") ;
   //PG plot the result of the fits on top
-  TF1 * f_ratio = new TF1 ("f_ratio", ratio_crystalBallLowHigh, 0, 2000, 14) ;
+  TF1 * f_ratio = new TF1 ("f_ratio", ratio_crystalBallLowHighWithRise, 0, 2000, 16) ;
   f_ratio->SetParameters (params_difference) ;
   f_ratio->SetNpx (10000) ;
   f_ratio->SetLineWidth (2) ;
