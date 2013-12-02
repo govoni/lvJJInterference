@@ -668,14 +668,15 @@ int macro_findInterferece (string filename, double mass, int initialRebin = 1)
   TH1F * h_MWW_mg       = (TH1F *) f->Get ("h_MWW_mg") ;
 
   int reBin = initialRebin ;
-  if (mass > 480) reBin *= 2 ;
-  else if (mass > 610) reBin *= 4 ;
-  else if (mass > 810) reBin *= 6 ;
+  if      (mass > 310 && mass < 610) reBin *= 2 ;
+  else if (mass > 610 && mass < 810) reBin *= 4 ;
+  else if (mass > 810)               reBin *= 12 ;
   double rangeScale = 1.5 ; // for plotting purposes
   if (mass > 480) rangeScale = 2 ;
   
   int scaling = 0 ;
   
+  cout << "\n--------------------------------------------------\n" ;
   cout << "rebinning factor: " << reBin << "\n" ;
   cout << "MG bins number before rebinning: " << h_MWW_mg->GetNbinsX () << "\n" ;
   
