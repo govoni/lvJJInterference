@@ -44,6 +44,30 @@ double crystalBallLowHigh (double* x, double* par)
 }
 
 
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+double leftRise (double * x, double * par)
+{
+//  return (-1. / (par[0] * (x[0] - 180.)) + 1) ;
+//  return (-1. / (par[0] * TMath::Sqrt (x[0] - 180.))) ;
+//  return (-1. / (    par[0] * (x[0] - 180.)    )) ;
+  return par[0] * ( 1. / (1. + TMath::Exp (-1. * par[1] * x[0]) ) - 1. )  ;
+}
+
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+double crystalBallLowHighWithRise (double* x, double* par)
+{
+  //PG the first 7 parameters are passed to the crystalBallLowHigh
+//  return TMath::Log (par[7] * (x[0] - 180.)) * crystalBallLowHigh (x, par) ;
+//  return leftRise (x, par + 7) * crystalBallLowHigh (x, par) ;
+  return leftRise (x, par + 7) + crystalBallLowHigh (x, par) ;
+}
+
+
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
@@ -116,18 +140,18 @@ struct intCont
       TString name = "f_sig_" ;
       name += m_mass ;
       f_sig = (TF1 *) ((TF1 *) input.Get ("func_mg_1"))->Clone (name) ;
-      f_sAi = (TF1 *) ((TF1 *) input.Get ("func_ph_1"))->Clone (name) ;
+      f_sAi = (TF1 *) ((TF1 *) input.Get ("func_ph_2"))->Clone (name) ;
       input.Close () ;
     } 
-  void setsigGraphs (TGraph ** local_tg_sig_par, int index)
+  void setsigGraphs (TGraph ** local_tg_sig_par, int index, int Npar = 7)
     {
-      for (int k = 0 ; k < 7 ; ++k)
+      for (int k = 0 ; k < Npar ; ++k)
         local_tg_sig_par[k]->SetPoint (index, m_mass, f_sig->GetParameter (k)) ; 
       return ;
     }
-  void setsAiGraphs (TGraph ** local_tg_sAi_par, int index)
+  void setsAiGraphs (TGraph ** local_tg_sAi_par, int index, int Npar = 9)
     {
-      for (int k = 0 ; k < 7 ; ++k)
+      for (int k = 0 ; k < Npar ; ++k)
         local_tg_sAi_par[k]->SetPoint (index, m_mass, f_sAi->GetParameter (k)) ; 
       return ;
     }
@@ -150,9 +174,9 @@ struct corrections
   corrections (string path, string scale = "1") : m_path (path), m_scale (scale)
     {
       tg_sig_par = new TGraph * [7] ; // [parameter][mass]
-      tg_sAi_par = new TGraph * [7] ;
       for (int k = 0 ; k < 7 ; ++k) tg_sig_par[k] = new TGraph (5) ;
-      for (int k = 0 ; k < 7 ; ++k) tg_sAi_par[k] = new TGraph (5) ;
+      tg_sAi_par = new TGraph * [9] ;
+      for (int k = 0 ; k < 9 ; ++k) tg_sAi_par[k] = new TGraph (5) ;
 
       //PG fill the graphs from the input files
       //PG ---- ---- ---- ---- ---- ---- ---- ----
@@ -177,20 +201,20 @@ struct corrections
     }
 
 
-TGraph * makeLog (TGraph * orig)
-  {
-    TGraph * dummy = new TGraph (orig->GetN ()) ;
-    for (int k = 0 ; k < orig->GetN () ; ++k) 
-      {
-        double x, y ;
-        orig->GetPoint (k, x, y) ;
-        dummy->SetPoint (k, x, TMath::Log (y)) ;
-      }
-    return dummy ;
-  }
+  TGraph * makeLog (TGraph * orig)
+    {
+      TGraph * dummy = new TGraph (orig->GetN ()) ;
+      for (int k = 0 ; k < orig->GetN () ; ++k) 
+        {
+          double x, y ;
+          orig->GetPoint (k, x, y) ;
+          dummy->SetPoint (k, x, TMath::Log (y)) ;
+        }
+      return dummy ;
+    }
 
 
-  TF1 * initiateFunction (TGraph ** tg_sample_par, TString fname, double mass)
+  TF1 * initiateFunction_sig (TGraph ** tg_sample_par, TString fname, double mass)
     {
       TGraph * log_tg_sample_par0 = makeLog (tg_sample_par[0]) ;
       TF1 * f_sample = new TF1 (fname, crystalBallLowHigh, 200, 2000, 7) ;
@@ -203,10 +227,23 @@ TGraph * makeLog (TGraph * orig)
     }
 
 
+  TF1 * initiateFunction_sAi (TGraph ** tg_sample_par, TString fname, double mass)
+    {
+      TGraph * log_tg_sample_par0 = makeLog (tg_sample_par[0]) ;
+      TF1 * f_sample = new TF1 (fname, crystalBallLowHighWithRise, 200, 2000, 9) ;
+      f_sample->SetParameter (0, TMath::Exp (log_tg_sample_par0->Eval (mass))) ;
+      for (int iPar = 1 ; iPar < 9 ; ++iPar)
+        {
+          f_sample->SetParameter (iPar, tg_sample_par[iPar]->Eval (mass)) ;
+        }
+      return f_sample ;
+    }
+
+
   void prepareFunctions (float mass)
     {
-      f_sig = initiateFunction (tg_sig_par, "f_sig", mass) ;
-      f_sAi = initiateFunction (tg_sAi_par, "f_sAi", mass) ;
+      f_sig = initiateFunction_sig (tg_sig_par, "f_sig", mass) ;
+      f_sAi = initiateFunction_sAi (tg_sAi_par, "f_sAi", mass) ;
       return ;
     }
 
@@ -244,14 +281,16 @@ int macro_testCorrection ()
 {
 
   string correctionsFolder = "./" ;
-  float mass = 500. ;
+//  float mass = 500. ;
+  float mass = 800. ;
 
   //PG read the correction factors
   corrections corrTool_1 (correctionsFolder, "1") ;    corrTool_1.prepareFunctions (mass) ; // central
   corrections corrTool_H (correctionsFolder, "0.5") ;  corrTool_H.prepareFunctions (mass) ; // half
   corrections corrTool_D (correctionsFolder, "2") ;    corrTool_D.prepareFunctions (mass) ; // double
   
-  TFile f_signal ("testCorrection.root") ;
+//  TFile f_signal ("testCorrection.500.root") ;
+  TFile f_signal ("testCorrection.800.root") ;
   TH1F * h_MWW_mg = (TH1F *) f_signal.Get ("h_MWW_mg") ;
   h_MWW_mg->Rebin (2) ;
 
@@ -268,7 +307,7 @@ int macro_testCorrection ()
 
   
   TCanvas * c1 = new TCanvas ("c1") ;
-  TH1F * h_c1 = (TH1F *) c1->DrawFrame (200, 0., 800, 2.) ;
+  TH1F * h_c1 = (TH1F *) c1->DrawFrame (200, 0., 1200, 0.01) ;
   h_c1->SetTitle (0) ;
   h_c1->SetStats (0) ;
   h_c1->GetXaxis ()->SetTitle ("m_{WW} (GeV)") ;
@@ -278,7 +317,8 @@ int macro_testCorrection ()
   correct_1->Draw ("same") ;
 
 
-  c1->Print ("reweighedSig.pdf", "pdf") ;
+//  c1->Print ("reweighedSig.500.pdf", "pdf") ;
+  c1->Print ("reweighedSig.800.pdf", "pdf") ;
   
 
   return 0 ;  
