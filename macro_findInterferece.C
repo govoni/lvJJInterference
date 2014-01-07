@@ -449,6 +449,7 @@ TF1 * FIT_madgraph_signal (TH1F * h_MWW_mg, float mass, float rangeScale, TStrin
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
+//PG no left rise
 TF1 * FIT_phantom_signal (TH1F * diff, float mass, float rangeScale, TString suffix, bool useLikelihood = false)
 {  
  TCanvas * c4_ph = new TCanvas ("c4_ph", "c4_ph") ;
@@ -554,6 +555,7 @@ double crystalBallLowHighWithRise (double* x, double* par)
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
+//PG left rise
 TF1 * FIT_phantom_signal_2 (TH1F * diff, float mass, float rangeScale, TString suffix, bool useLikelihood = false)
 {  
  TCanvas * c4_ph = new TCanvas ("c4_ph", "c4_ph") ;
@@ -586,35 +588,35 @@ TF1 * FIT_phantom_signal_2 (TH1F * diff, float mass, float rangeScale, TString s
   //PG second fit: first with chisq, if requested with likelihood also
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
  
-  TF1 * func_ph_2 = new TF1 ("func_ph_2", crystalBallLowHighWithRise, 0, 2000, 9) ;
-  func_ph_2->SetNpx (10000) ;
-  func_ph_2->SetLineWidth (1) ;
-  func_ph_2->SetLineColor (kRed + 1) ;
+  TF1 * func_ph_1 = new TF1 ("func_ph_1", crystalBallLowHighWithRise, 0, 2000, 9) ;
+  func_ph_1->SetNpx (10000) ;
+  func_ph_1->SetLineWidth (1) ;
+  func_ph_1->SetLineColor (kRed + 1) ;
   
-  setParNamesdoubleGausCrystalBallLowHigh (func_ph_2) ;
+  setParNamesdoubleGausCrystalBallLowHigh (func_ph_1) ;
 
-  func_ph_2->SetParameter (0, diff->Integral ()) ;                //PG multiplicative scale
-  func_ph_2->SetParameter (1, mass) ;                             //PG mean
-  func_ph_2->SetParameter (2, 2 * gauss_ph->GetParameter (2)) ;   //PG gaussian sigma
-  func_ph_2->SetParLimits (2, 0., mass) ;                         
-  func_ph_2->SetParameter (3, 1) ;                                //PG right junction
-  func_ph_2->SetParLimits (3, 0.1, 5) ;                           //PG right junction
-  func_ph_2->FixParameter (4, 3) ;                                //PG right power law order            //PG NB THIS IS FIXED
-  func_ph_2->FixParameter (5, 1) ;                                //PG left junction                    //PG NB THIS IS FIXED
-  func_ph_2->FixParameter (6, 3) ;                                //PG left power law order             //PG NB THIS IS FIXED
-  func_ph_2->FixParameter (7, f_leftRise->GetParameter (0)) ;     //PG from the first fit to the rise
-  func_ph_2->FixParameter (8, f_leftRise->GetParameter (1)) ;     //PG from the first fit to the rise
+  func_ph_1->SetParameter (0, diff->Integral ()) ;                //PG multiplicative scale
+  func_ph_1->SetParameter (1, mass) ;                             //PG mean
+  func_ph_1->SetParameter (2, 2 * gauss_ph->GetParameter (2)) ;   //PG gaussian sigma
+  func_ph_1->SetParLimits (2, 0., mass) ;                         
+  func_ph_1->SetParameter (3, 1) ;                                //PG right junction
+  func_ph_1->SetParLimits (3, 0.1, 5) ;                           //PG right junction
+  func_ph_1->FixParameter (4, 3) ;                                //PG right power law order            //PG NB THIS IS FIXED
+  func_ph_1->FixParameter (5, 1) ;                                //PG left junction                    //PG NB THIS IS FIXED
+  func_ph_1->FixParameter (6, 3) ;                                //PG left power law order             //PG NB THIS IS FIXED
+  func_ph_1->FixParameter (7, f_leftRise->GetParameter (0)) ;     //PG from the first fit to the rise
+  func_ph_1->FixParameter (8, f_leftRise->GetParameter (1)) ;     //PG from the first fit to the rise
 
   cout << "-------------------\nFITTING THE PHANTOM SIGNAL with left turn on \n\n-------------------\n" ;
-//  diff->Fit ("func_ph_2", "", "", 0.5 * mass - 50, 2 * mass) ;
-  diff->Fit ("func_ph_2", "", "", 200., 2 * mass) ;
+//  diff->Fit ("func_ph_1", "", "", 0.5 * mass - 50, 2 * mass) ;
+  diff->Fit ("func_ph_1", "", "", 200., 2 * mass) ;
   if (useLikelihood)
     {
       cout << "-------------------\nFITTING THE PHANTOM SIGNAL W/ LIKELIHOOD with left turn on\n\n-------------------\n" ;
-      func_ph_2->SetParameters (func_ph_2->GetParameters ()) ;
-      func_ph_2->SetLineColor (kRed + 3) ;
-//      diff->Fit ("func_ph_2", "L+", "", 0.5 * mass - 50, 1.5 * mass) ;
-      diff->Fit ("func_ph_2", "L+", "", 200., 1.5 * mass) ;
+      func_ph_1->SetParameters (func_ph_1->GetParameters ()) ;
+      func_ph_1->SetLineColor (kRed + 3) ;
+//      diff->Fit ("func_ph_1", "L+", "", 0.5 * mass - 50, 1.5 * mass) ;
+      diff->Fit ("func_ph_1", "L+", "", 200., 1.5 * mass) ;
     }
     
   float ymax = diff->GetBinContent (diff->GetMaximumBin ()) ;
@@ -627,8 +629,8 @@ TF1 * FIT_phantom_signal_2 (TH1F * diff, float mass, float rangeScale, TString s
   diff->Draw ("EPsame") ;
 
   //PG limits of the gaussian core
-  double rightTh_ph = fabs (func_ph_2->GetParameter (3)) * fabs (func_ph_2->GetParameter (2)) + func_ph_2->GetParameter (1) ;
-  double leftTh_ph  = -1 * fabs (func_ph_2->GetParameter (5)) * fabs (func_ph_2->GetParameter (2)) + func_ph_2->GetParameter (1) ;
+  double rightTh_ph = fabs (func_ph_1->GetParameter (3)) * fabs (func_ph_1->GetParameter (2)) + func_ph_1->GetParameter (1) ;
+  double leftTh_ph  = -1 * fabs (func_ph_1->GetParameter (5)) * fabs (func_ph_1->GetParameter (2)) + func_ph_1->GetParameter (1) ;
   TLine * l_rightTh_ph = new TLine (rightTh_ph, 0.9 * ymin, rightTh_ph, 1.1 * ymax) ;
   l_rightTh_ph->SetLineColor (kRed) ;
   l_rightTh_ph->Draw ("same") ;
@@ -646,7 +648,7 @@ TF1 * FIT_phantom_signal_2 (TH1F * diff, float mass, float rangeScale, TString s
 
   c4_ph->Print (TString ("signals_ph_lin_leftTail") + suffix, "pdf") ;
 
-  return func_ph_2 ;
+  return func_ph_1 ;
 }
 
 
@@ -654,7 +656,7 @@ TF1 * FIT_phantom_signal_2 (TH1F * diff, float mass, float rangeScale, TString s
 // ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
 
 
-int macro_findInterferece (string filename, double mass, int initialRebin = 1)                                                        
+int macro_findInterferece (string filename, double mass, int initialRebin = 1, bool useLeftRise = true)                                                        
 {        
 
   TVirtualFitter::SetDefaultFitter ("Minuit2") ;
@@ -786,7 +788,9 @@ int macro_findInterferece (string filename, double mass, int initialRebin = 1)
 
   //PG (SBI - B) only ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
-  TF1 * func_ph_1 = FIT_phantom_signal_2 (diff, mass, rangeScale, suffix, false) ;
+  TF1 * func_ph_1 ;
+  if (true == useLeftRise) func_ph_1 = FIT_phantom_signal_2 (diff, mass, rangeScale, suffix, false) ;
+  else                     func_ph_1 = FIT_phantom_signal   (diff, mass, rangeScale, suffix, false) ;
 
   //PG (SBI - B) - S only   i.e   INTERFERENCE FIT 
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
