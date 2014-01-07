@@ -314,8 +314,6 @@ double ratio_crystalBallLowHigh (double* x, double* par)
 }
 
 
-
-
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
@@ -551,6 +549,7 @@ double crystalBallLowHighWithRise (double* x, double* par)
 //  return leftRise (x, par + 7) * crystalBallLowHigh (x, par) ;
   return leftRise (x, par + 7) + crystalBallLowHigh (x, par) ;
 }
+
 
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
