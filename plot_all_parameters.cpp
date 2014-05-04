@@ -598,6 +598,21 @@ TF1 * FIT_phantom_signal (TH1F * diff, double mass, double rangeScale, TString s
 
   if (mass==1000) {
 
+    if (cprime==1.) {
+    func_ph_1->SetParameter (3, 5) ;                                                   // right junction 
+    func_ph_1->SetParLimits(3,3,7);  
+    func_ph_1->SetParameter (4, 4) ;   // right power law order                                                
+    func_ph_1->SetParLimits (4,3.5,5);
+    func_ph_1->SetParameter (5, 0.95) ;                                                  // left junction
+    func_ph_1->SetParLimits (5, 0.1,3) ;                                                  // left junction
+    func_ph_1->SetParameter (6, 1.5) ;                                                  // left power law order   
+    func_ph_1->SetParLimits (6, 0.1,4) ;                                                  // left power law order   
+    func_ph_1->SetParameter (7, 1.2);
+    func_ph_1->SetParLimits (7, 0.5,1.5) ;                              
+    func_ph_1->SetParameter (8,16);
+    func_ph_1->SetParLimits (8,10,20) ;
+    }
+    else {
     func_ph_1->SetParameter (3, 5) ;                                                   // right junction 
     func_ph_1->SetParLimits(3,0.1,8);  
     func_ph_1->SetParameter (4, 4) ;   // right power law order                                                
@@ -610,6 +625,7 @@ TF1 * FIT_phantom_signal (TH1F * diff, double mass, double rangeScale, TString s
     func_ph_1->SetParLimits (7, 0.5,1.5) ;                              
     func_ph_1->SetParameter (8,16);
     func_ph_1->SetParLimits (8,10,20) ;
+    }
 }
 
   else if (mass==800) {
@@ -1191,7 +1207,7 @@ void call_fit (int mass, string massa,  std::vector<vector<double> > &param,   s
       stringa.append(cprime_string[c]);
       stringa.append(".1.root");
 
-      macro_findInterferece (stringa, mass, param_temp, param_error_temp, 1, cprime[c]);
+      macro_findInterferece (stringa, mass, param_temp, param_error_temp, 1, cprime[c]); //call fit on a single point (mass,cprime)
 
       param.push_back(param_temp);
       param_error.push_back(param_error_temp);
@@ -1319,6 +1335,7 @@ int main(int argc, char *argv[])
 
 
   TString parameters [9] = {"Norm_CB","Mean_CB_over_Higgs_mass","Sigma_CB_over_Higgs_width","alphaR_CB_times_Sigma_CB","nR_CB","alphaL_CB_times_Sigma_CB","nL_CB","Norm_Exp","Slope_EXP"};
+  TString parameters_normal [9] = {"Norm_CB","Mean_CB","Sigma_CB","alphaR_CB","nR_CB","alphaL_CB","nL_CB","Norm_Exp","Slope_EXP"};
   double min[9] = {0,0.8,0,0,0,0,0,0,0};
   double max[9] = {0.001,1.2,0.6,300,12,300,8,100,100};
 
@@ -1331,20 +1348,19 @@ int main(int argc, char *argv[])
   double param1000_sorted [6] = {0.,0.,0.,0.,0.,0.};
   double paramerror1000_sorted [6] = {0.,0.,0.,0.,0.,0.};
 
-  /*  ofstream file;
-  file.open ("fit_result.txt");
+  ofstream file;
+  file.open ("fit_result.txt");  //write fit results on file
 
-  file<<"350 GeV: \t\t 650 GeV \t\t 800 GeV \t\t 1000 GeV\n\n";
-  //controllo
+  file<<"350 GeV: \t\t 650 GeV \t\t 800 GeV \t\t 1000 GeV\n";
   for (int i=0; i<Npar; i++) {
-    file<<"\n"<<parameters[i] <<"\n";
+    file<<"\n"<<parameters_normal[i] <<"\n";
     for (int c=0; c<Ncprime; c++) {
-      file<<param350_sorted.at(i).at(c) <<" +/- "<<paramerror350_sorted.at(i).at(c)<<"\t"<<param650_sorted.at(i).at(c) <<" +/- "<<paramerror650_sorted.at(i).at(c)<<"\t"<<param800_sorted.at(i).at(c) <<" +/- "<<paramerror800_sorted.at(i).at(c)<<"\t"<<param1000_sorted.at(i).at(c) <<" +/- "<<paramerror1000_sorted.at(i).at(c)<<"\n";
+      file<<param350.at(c).at(i) <<" +/- "<<paramerror350.at(c).at(i)<<"\t"<<param650.at(c).at(i) <<" +/- "<<paramerror650.at(c).at(i)<<"\t"<<param800.at(c).at(i) <<" +/- "<<paramerror800.at(c).at(i)<<"\t"<<param1000.at(c).at(i) <<" +/- "<<paramerror1000.at(c).at(i)<<"\n";
     }
   }
 
   file.close();
-  */
+  
   for (int i=0; i<Npar; i++) {
     for (int c=0; c<Ncprime; c++) {
 
@@ -1392,7 +1408,7 @@ int main(int argc, char *argv[])
   
 
 
-  TString *namefile = new TString (parameters[i]);
+    TString *namefile = new TString (parameters[i]);  //save results (graph and root files)
   namefile->Append(".root");
   TFile* outfile = new TFile(namefile->Data(), "RECREATE");
 
@@ -1463,17 +1479,6 @@ int main(int argc, char *argv[])
   outfile->Close();
 
 
-
-
-
-
-
-
-
-
-
-
-  //   produce_plot (parameters[i],param350_sorted,paramerror350_sorted, param650_sorted,paramerror650_sorted, param800_sorted,paramerror800_sorted, param1000_sorted,paramerror1000_sorted, min[i],max[i]);
   }
 
   return(0);
