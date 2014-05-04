@@ -44,6 +44,8 @@ double crystalBallLow(double* x, double* par);
 /*** double crystall ball ***/
 double crystalBallLowHigh(double* x, double* par);
 
+double crystalBallLowHighWithRise(double* x, double* par);
+
 /*** gaussian ***/
 double gaussian(double* x, double* par);
 
