@@ -26,6 +26,7 @@
 #include "TLine.h"
 #include "TSystem.h"
 #include "TStyle.h"
+#include "TMath.h"
 
 using namespace std;
 
@@ -166,6 +167,8 @@ void setParNamesdoubleGausCrystalBallLowHigh (TF1 * func)
   func->SetParName (4, "nR") ;
   func->SetParName (5, "alphaL") ;
   func->SetParName (6, "nL") ;
+  func->SetParName (7, "R") ;
+  func->SetParName (8, "Tau") ;
   return ;
 }  
 
@@ -523,13 +526,6 @@ TF1 * FIT_phantom_signal (TH1F * diff, double mass, double rangeScale, TString s
 {  
  TCanvas * c4_ph = new TCanvas ("c4_ph", "c4_ph") ;
 
- //   int cprime100 = cprime*100;   //cprime has some round-off problems not-well understood: if (cprime==x) does not work, so it is necessary to convert it to int
-
- // std::cout<<cprime*100<<" BBBB"<<std::endl;
- //  if (cprime == 1.)   
- //       std::cout<<"AAAAA"<<std::endl;
-  
- 
   //PG first fit: get the width for the second fit
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
@@ -561,143 +557,221 @@ TF1 * FIT_phantom_signal (TH1F * diff, double mass, double rangeScale, TString s
   
   setParNamesdoubleGausCrystalBallLowHigh (func_ph_1) ;
 
-  func_ph_1->SetParameter (0, diff->GetBinContent (diff->GetMaximumBin ())) ;  // multiplicative scale                                                
-
   if (mass==350) {
-    func_ph_1->FixParameter(1,mass*(1.000-0.001*cprime));
 
-    func_ph_1->FixParameter (2, 15.2*(0.013+0.386*cprime)) ;
+    func_ph_1->SetParameter (0, 0.0005) ;  // multiplicative scale                                                
+    func_ph_1->SetParLimits (0, 0,0.006) ;  // multiplicative scale                                                
+
+    func_ph_1->FixParameter(1,mass*(0.9998-0.000526754*cprime+0.000429871*cprime*cprime));
+    func_ph_1->FixParameter (2, 15.2*(0.0434105+0.275992*cprime+ 0.111858*cprime*cprime)) ;
+    //    func_ph_1->SetParameter(1,mass*(1.000-0.001*cprime));
+    //   func_ph_1->SetParameter (2, 15.2*(0.013+0.386*cprime)) ;
+
+    func_ph_1->SetParameter(3,1.);
+    func_ph_1->SetParLimits(3,0.5,2);
+
+    func_ph_1->SetParameter(4,2.);
+    if (cprime==0.1)  func_ph_1->SetParLimits(4,1.5,3.);    
+    else if (cprime==1.)  func_ph_1->SetParLimits(4,1.5,3.);    
+    else  func_ph_1->SetParLimits(4,1.5,3.5);    
+    	
+    func_ph_1->SetParameter (5, 0.95) ;                                                  // left junction
+    func_ph_1->SetParLimits (5, 0.5,4.) ;                                                  // left junction
+    func_ph_1->SetParameter (6, 1.5) ;                                                  // left power law order   
+    func_ph_1->SetParLimits (6, 0.1,2.5) ; 
+    func_ph_1->SetParameter (7, 0.01) ;                             
+    func_ph_1->SetParLimits (7, 0.001,1.);
+    func_ph_1->SetParameter (8, 0.01) ;  
+    func_ph_1->SetParLimits (8, 0.001,0.03) ;                              
+    
   }
+
 
   else if (mass==650) {
-  func_ph_1->FixParameter(1,mass*(0.997-0.010*cprime));
-  func_ph_1->FixParameter(2,158*(0.023+0.361*cprime));
+
+      func_ph_1->SetParameter (0, diff->GetBinContent (diff->GetMaximumBin ())) ;  // multiplicative scale                                                
+      func_ph_1->SetParLimits (0, 0,0.006) ;  // multiplicative scale                                                
+
+      func_ph_1->FixParameter(1,mass*(0.999507-0.0220663*cprime+0.00977862*cprime*cprime));
+      func_ph_1->FixParameter(2,158.*(0.000346819+0.444949*cprime-0.0323701*cprime*cprime));
+
+      func_ph_1->SetParameter(3,2.);
+      if (cprime==0.5)    func_ph_1->SetParLimits (3, 1, 3) ; 
+      else if (cprime==0.7)    func_ph_1->SetParLimits (3, 1, 3) ; 
+      else if (cprime==0.9)    func_ph_1->SetParLimits (3, 1, 2) ; 
+      else if (cprime==1.)   { func_ph_1->SetParameter(3,3.); func_ph_1->SetParLimits (3, 1.5, 4) ; }
+      else        func_ph_1->SetParLimits (3, 0.1, 20) ;                                                   // right junction
+      
+      func_ph_1->SetParameter(4,0.5);
+      func_ph_1->SetParLimits(4,0.1,2.);
+
+      func_ph_1->SetParameter (5, 0.95) ;                                                  // left junction
+      func_ph_1->SetParLimits (5, 0.5,4) ;                                                  // left junction
+      func_ph_1->SetParameter (6, 1.5) ;                                                  // left power law order   
+      func_ph_1->SetParLimits (6, 0.1,4) ;                            
+
+      func_ph_1->SetParameter(7,0.1);
+      if (cprime==0.3)  func_ph_1->SetParLimits(7,0.001,0.3);
+      else func_ph_1->SetParLimits(7,0.001,1);
+
+      	  func_ph_1->SetParameter (8,5);
+      	  func_ph_1->SetParLimits (8,1,20) ;
+
+      //	  func_ph_1->SetParameter (8,2);
+      //	  func_ph_1->SetParLimits (8,0.1,10) ;
+
+      //      func_ph_1->SetParameter(8,0.01);
+      //   func_ph_1->SetParLimits (8, 0.001,0.03) ;                              
+
   }
+
+
 
   else if (mass==800) {
 
-    if (cprime == 1.) { 
-          func_ph_1->FixParameter (1, mass*(1.007-0.122*cprime+0.093*cprime*cprime));//gauss_ph->GetParameter(1)) ;          // mean 
-	  func_ph_1->SetParameter(2, 304*(0.003+0.405*cprime) );
-	  func_ph_1->SetParLimits(2, 50,300 );
-    }
-    else     {
-          func_ph_1->FixParameter (1, mass*(1.007-0.122*cprime+0.093*cprime*cprime));//gauss_ph->GetParameter(1)) ;          // mean 
-          func_ph_1->FixParameter (2, 304*(0.003+0.405*cprime) );//gauss_ph->GetParameter (2)) ; 
-    }
-  }
+      func_ph_1->SetParameter (0, diff->GetBinContent (diff->GetMaximumBin ())) ;  // multiplicative scale                                                
+               func_ph_1->SetParLimits (0, 0,0.00006) ;  // multiplicative scale                                                
+   
 
-  else if (mass==1000) {
-    func_ph_1->FixParameter (1, mass*(1.020-0.322*cprime+0.210*cprime*cprime)) ;                                                  // mean            
-    if (cprime!=0.9)
-      func_ph_1->FixParameter (2,647*0.38*cprime);
-    else
-      func_ph_1->FixParameter (2,156);
+      func_ph_1->FixParameter (1, mass*(1.007-0.122*cprime+0.093*cprime*cprime));//gauss_ph->GetParameter(1)) ;          // mean 
+      func_ph_1->FixParameter (2, 304.*(-0.00604924+0.513915*cprime -0.151204*cprime*cprime) );//gauss_ph->GetParameter (2)) ; 
+
+     if (cprime==0.5) {
+      
+      func_ph_1->SetParameter(3,1.);
+      func_ph_1->SetParLimits(3,0.5,2);
+      func_ph_1->SetParameter(4,1.);
+      func_ph_1->SetParLimits(4,0.5,2.);
+
+      func_ph_1->SetParameter (5, 0.62) ;                                                  // left junction
+      func_ph_1->SetParLimits (5, 0.1,1) ;                                                  // left junction
+      func_ph_1->SetParameter (6, 2) ;                                                  // left power law order   
+      func_ph_1->SetParLimits (6, 1.5,3) ;                                                  // left power law order   
+
+      func_ph_1->SetParameter(7,0.50);
+      func_ph_1->SetParLimits(7,0.1,1);
+
+	  func_ph_1->SetParameter (8,6);
+	  func_ph_1->SetParLimits (8,1,20) ;
+      //      func_ph_1->SetParameter(8,0.01);
+      //   func_ph_1->SetParLimits (8, 0.005,0.03) ;                              
+      }
+
+     else {
+      
+      func_ph_1->SetParameter(3,1.);
+      func_ph_1->SetParLimits(3,0.5,2);
+      func_ph_1->SetParameter(4,1.);
+      func_ph_1->SetParLimits(4,0.5,2.);
+
+      func_ph_1->SetParameter (5, 0.62) ;                                                  // left junction
+      func_ph_1->SetParLimits (5, 0.1,2) ;                                                  // left junction
+      func_ph_1->SetParameter (6, 1.5) ;                                                  // left power law order   
+      func_ph_1->SetParLimits (6, 0.1,3) ;                                                  // left power law order   
+
+      func_ph_1->SetParameter(7,0.50);
+      func_ph_1->SetParLimits(7,0.001,1);
+
+	  func_ph_1->SetParameter (8,6);
+	  func_ph_1->SetParLimits (8,1,20) ;
+      // func_ph_1->SetParameter(8,0.01);
+      //    func_ph_1->SetParLimits (8, 0.005,0.03) ;       
+
+     }
+
+
   }
 
 
   if (mass==1000) {
 
-    if (cprime==1.) {
-    func_ph_1->SetParameter (3, 5) ;                                                   // right junction 
-    func_ph_1->SetParLimits(3,3,7);  
-    func_ph_1->SetParameter (4, 4) ;   // right power law order                                                
-    func_ph_1->SetParLimits (4,3.5,5);
-    func_ph_1->SetParameter (5, 0.95) ;                                                  // left junction
-    func_ph_1->SetParLimits (5, 0.1,3) ;                                                  // left junction
-    func_ph_1->SetParameter (6, 1.5) ;                                                  // left power law order   
-    func_ph_1->SetParLimits (6, 0.1,4) ;                                                  // left power law order   
-    func_ph_1->SetParameter (7, 1.2);
-    func_ph_1->SetParLimits (7, 0.5,1.5) ;                              
-    func_ph_1->SetParameter (8,16);
-    func_ph_1->SetParLimits (8,10,20) ;
-    }
+      func_ph_1->SetParameter (0, diff->GetBinContent (diff->GetMaximumBin ())) ;  // multiplicative scale                                                
+      //      func_ph_1->SetParLimits (0, 0,0.00006) ;  // multiplicative scale                                                
+         func_ph_1->SetParLimits (0, 0,1) ;  // multiplicative scale                                                
+
+      func_ph_1->FixParameter (1, mass*(1.020-0.322*cprime+0.210*cprime*cprime)) ;                                                  // mean            
+      if (cprime!=0.9)	func_ph_1->FixParameter (2,647*0.38*cprime);
+      else      func_ph_1->FixParameter (2,156);
+
+
+
+
+
+      if (mass==1000) {
+
+	if (cprime==1.) {
+	  func_ph_1->SetParameter (3, 5) ;                                                   // right junction                                                        
+	  func_ph_1->SetParLimits(3,3,7);
+	  func_ph_1->SetParameter (4, 4) ;   // right power law order                                                                                                 
+	  func_ph_1->SetParLimits (4,3.5,5);
+	  func_ph_1->SetParameter (5, 0.95) ;                                                  // left junction                                                       
+	  func_ph_1->SetParLimits (5, 0.1,3) ;                                                  // left junction                                                      
+	  func_ph_1->SetParameter (6, 1.5) ;                                                  // left power law order                                                 
+	  func_ph_1->SetParLimits (6, 0.1,4) ;                                                  // left power law order                                               
+	  func_ph_1->SetParameter (7, 1.2);
+	  func_ph_1->SetParLimits (7, 0.5,1.5) ;
+	  func_ph_1->SetParameter (8,16);
+	  func_ph_1->SetParLimits (8,10,20) ;
+	}
+	else {
+	  func_ph_1->SetParameter (3, 5) ;                                                   // right junction                                                        
+	  func_ph_1->SetParLimits(3,0.1,8);
+	  func_ph_1->SetParameter (4, 4) ;   // right power law order                                                                                                 
+	  func_ph_1->SetParLimits (4,3.5,7);
+	  func_ph_1->SetParameter (5, 0.95) ;                                                  // left junction                                                       
+	  func_ph_1->SetParLimits (5, 0.1,3) ;                                                  // left junction                                                      
+	  func_ph_1->SetParameter (6, 1.5) ;                                                  // left power law order                                                 
+	  func_ph_1->SetParLimits (6, 0.1,10) ;                                                  // left power law order                                              
+	  func_ph_1->SetParameter (7, 1.2);
+	  func_ph_1->SetParLimits (7, 0.5,1.5) ;
+	  func_ph_1->SetParameter (8,16);
+	  func_ph_1->SetParLimits (8,10,20) ;
+	}
+      }
+
+
+
+
+
+
+
+
+
+      /*
+
+      if (cprime==1.) {
+	func_ph_1->SetParameter (3, 5) ;                                                   // right junction 
+	func_ph_1->SetParLimits(3,3,7);  
+	func_ph_1->SetParameter (4, 4) ;   // right power law order                                                
+	func_ph_1->SetParLimits (4,3.5,5);
+	func_ph_1->SetParameter (5, 0.95) ;                                                  // left junction
+	func_ph_1->SetParLimits (5, 0.1,3) ;                                                  // left junction
+	func_ph_1->SetParameter (6, 1.5) ;                                                  // left power law order   
+	func_ph_1->SetParLimits (6, 0.1,3) ;                                                  // left power law order   
+      func_ph_1->SetParameter(8,0.01);
+      func_ph_1->SetParLimits (8, 0.005,0.03) ;                              
+
+      }
     else {
-    func_ph_1->SetParameter (3, 5) ;                                                   // right junction 
-    func_ph_1->SetParLimits(3,0.1,8);  
-    func_ph_1->SetParameter (4, 4) ;   // right power law order                                                
-    func_ph_1->SetParLimits (4,3.5,7);
-    func_ph_1->SetParameter (5, 0.95) ;                                                  // left junction
-    func_ph_1->SetParLimits (5, 0.1,3) ;                                                  // left junction
-    func_ph_1->SetParameter (6, 1.5) ;                                                  // left power law order   
-    func_ph_1->SetParLimits (6, 0.1,10) ;                                                  // left power law order   
-    func_ph_1->SetParameter (7, 1.2);
-    func_ph_1->SetParLimits (7, 0.5,1.5) ;                              
-    func_ph_1->SetParameter (8,16);
-    func_ph_1->SetParLimits (8,10,20) ;
+      func_ph_1->SetParameter (3, 5) ;                                                   // right junction 
+      func_ph_1->SetParLimits(3,0.1,8);  
+      func_ph_1->SetParameter (4, 4) ;   // right power law order                                                
+      func_ph_1->SetParLimits (4,3.5,7);
+      func_ph_1->SetParameter (5, 0.95) ;                                                  // left junction
+      func_ph_1->SetParLimits (5, 0.1,3) ;                                                  // left junction
+      func_ph_1->SetParameter (6, 1.5) ;                                                  // left power law order   
+      func_ph_1->SetParLimits (6, 0.1,3) ;                                                  // left power law order   
+      func_ph_1->SetParameter(8,0.01);
+      func_ph_1->SetParLimits (8, 0.005,0.03) ;                              
+
     }
-}
-
-  else if (mass==800) {
-    func_ph_1->SetParLimits (3, 0.1,2.5) ;                                                   // right junction  
-
-    if (cprime==0.1)  func_ph_1->SetParLimits(4,0.6,2);
-    else if (cprime==0.3)  func_ph_1->SetParLimits(4,0.6,2);
-    else if (cprime==0.5) {  func_ph_1->SetParLimits(4,1,2);      func_ph_1->SetParLimits (3, 0.1,10) ;  }
-    else if (cprime==0.7) {  func_ph_1->SetParLimits (3, 0.1,2.5) ;  func_ph_1->SetParLimits(4,0.5,1.5); }
-    else if (cprime==0.9) {  func_ph_1->SetParLimits (3, 0.1,2.5) ;  func_ph_1->SetParLimits(4,0.5,2.5); }
-    else         {  func_ph_1->SetParLimits (3, 1,2.5);      func_ph_1->SetParLimits (4,0.1,3.5); }
-
-    if (cprime!=1.) {
-    func_ph_1->SetParameter (5, 0.62) ;                                                  // left junction
-    func_ph_1->SetParLimits (5, 0.1,2) ;                                                  // left junction
-    func_ph_1->SetParameter (6, 1.5) ;                                                  // left power law order   
-    func_ph_1->SetParLimits (6, 0.1,3) ;                                                  // left power law order   
-    }
-
-    if (cprime==0.1) { func_ph_1->SetParameter(5,1.3);  func_ph_1->SetParLimits(5,1,2); }
-   if (cprime==0.5) { func_ph_1->SetParameter(5,0.9);  func_ph_1->SetParLimits(5,0.5,2); }
-      if (cprime==1.) {  
-    func_ph_1->SetParameter (5, 1.2) ;                                                  // left junction
-    func_ph_1->SetParLimits (5, 0.5,2) ;                                                  // left junction
-    func_ph_1->SetParLimits(6,1,3.5); }
-
-    func_ph_1->SetParameter (7, 4);
-    func_ph_1->SetParLimits (7, 0.1,5) ;                              
-    func_ph_1->SetParameter (8,100);
-    if (cprime==0.5 || cprime==0.3)   func_ph_1->SetParLimits (8,5,15);
-    else               func_ph_1->SetParLimits (8, 5,500) ;
-
-    if (cprime==1.)  {
-      //      func_ph_1->SetParLimits(5,0.1,3);   
-      //   func_ph_1->SetParLimits (6, 0.1,6) ;                                                  // left power law order   
-      func_ph_1->SetParameter (7, 4);
-      func_ph_1->SetParLimits (7, 0.1,5) ;                              
-      func_ph_1->SetParLimits (8,5,30);
-    }
+ func_ph_1->SetParameter(7,0.7);
+   func_ph_1->SetParLimits(7,0.3,1);
+   // func_ph_1->SetParLimits(7,10,100);
+   */
 
 }
-
-  else {
-
-  func_ph_1->SetParLimits (3, 0.1, 20) ;                                                   // right junction 
-  if (mass==650 && cprime==0.5)    func_ph_1->SetParLimits (3, 2, 5) ; 
-  if (mass==650 && cprime==0.7)    func_ph_1->SetParLimits (3, 2, 3) ; 
-   func_ph_1->SetParameter (4, 2.1) ;   // right power law order                                                
-  func_ph_1->SetParLimits (4, 0.1, 2.5) ;   // right power law order                                                
-  if (mass==350)  func_ph_1->SetParLimits(4,1,5);
-  if (mass==350 && cprime==0.1)  func_ph_1->SetParLimits(4,1,3);
-  if (mass==350 && cprime==0.9)  func_ph_1->SetParLimits(4,4.5,5.5);
-   if (mass==350 && cprime==1.)  func_ph_1->SetParLimits(4,0.1,5);
-   if (mass==650 && cprime==0.3)  func_ph_1->SetParLimits(4,0.1,1.1);
-   if (mass==650 && cprime==0.5)  func_ph_1->SetParLimits(4,0.1,2.3);
-
-
-      if (mass==650 && cprime==0.7)  func_ph_1->SetParLimits(4,1.5,2.5);
-     if (mass==650 && cprime==0.9)  func_ph_1->SetParLimits(4,1.,3.);
-     if (mass==650 && cprime==1.0)  func_ph_1->SetParLimits(4,1.5,3.5);
-  // if (mass==650 && cprime==0.9)   { func_ph_1->SetParLimits (4, 0.1, 1.5) ;  func_ph_1->SetParLimits (4, 0.1, 1.5) ; } 
-
-  func_ph_1->SetParameter (5, 0.95) ;                                                  // left junction
-  func_ph_1->SetParLimits (5, 0.5,4) ;                                                  // left junction
-  func_ph_1->SetParameter (6, 1.5) ;                                                  // left power law order   
-  func_ph_1->SetParLimits (6, 0.1,4) ;                                                  // left power law order   
-  func_ph_1->SetParameter (7, 4);
-  func_ph_1->SetParLimits (7, 0.01,5) ;                              
-  func_ph_1->SetParameter (8,53);
-  func_ph_1->SetParLimits (8, 10,200) ;                              
-
-  }
+ 
     
 
 
@@ -906,7 +980,7 @@ int macro_findInterferece (string filename, double mass, std::vector<double> & p
 
   int reBin = initialRebin ;
   if      (mass > 310 && mass < 610) reBin *= 2 ;
-  else if (mass > 610 && mass < 790) reBin *= 4 ;
+  else if (mass > 610 && mass < 790) reBin *= 8 ;
   else if (mass > 790 && mass < 860 && cprime==1.) reBin *= 20 ;
   else if (mass > 790 && mass < 860) reBin *= 8 ;
   else if (mass > 860)               reBin *= 20 ;
@@ -1209,6 +1283,7 @@ void call_fit (int mass, string massa,  std::vector<vector<double> > &param,   s
 
       macro_findInterferece (stringa, mass, param_temp, param_error_temp, 1, cprime[c]); //call fit on a single point (mass,cprime)
 
+      getchar();
       param.push_back(param_temp);
       param_error.push_back(param_error_temp);
 
@@ -1334,10 +1409,10 @@ int main(int argc, char *argv[])
   call_fit(1000, "1000", param1000, paramerror1000);
 
 
-  TString parameters [9] = {"Norm_CB","Mean_CB_over_Higgs_mass","Sigma_CB_over_Higgs_width","alphaR_CB_times_Sigma_CB","nR_CB","alphaL_CB_times_Sigma_CB","nL_CB","Norm_Exp","Slope_EXP"};
-  TString parameters_normal [9] = {"Norm_CB","Mean_CB","Sigma_CB","alphaR_CB","nR_CB","alphaL_CB","nL_CB","Norm_Exp","Slope_EXP"};
-  double min[9] = {0,0.8,0,0,0,0,0,0,0};
-  double max[9] = {0.001,1.2,0.6,300,12,300,8,100,100};
+  TString parameters [9] = {"Log_Norm_CB","Mean_CB_over_Higgs_mass","Sigma_CB_over_Higgs_width","alphaR_CB_times_Sigma_CB","nR_CB","alphaL_CB_times_Sigma_CB","nL_CB","R","Tau"};
+  TString parameters_normal [9] = {"Norm_CB","Mean_CB","Sigma_CB","alphaR_CB","nR_CB","alphaL_CB","nL_CB","R","Tau"};
+  double min[9] = {-16,0.8,0,0,0,0,0,0,0};
+  double max[9] = {-6,1.2,0.6,300,12,300,8,100,100};
 
   double param350_sorted [6] = {0.,0.,0.,0.,0.,0.};
   double paramerror350_sorted [6] = {0.,0.,0.,0.,0.,0.};
@@ -1364,7 +1439,17 @@ int main(int argc, char *argv[])
   for (int i=0; i<Npar; i++) {
     for (int c=0; c<Ncprime; c++) {
 
-      if (i==1) {          //if MeanCB, plot mean_CB/Higgs_mass
+      if (i==0) {          //if MeanCB, plot mean_CB/Higgs_mass
+	param350_sorted[c]=TMath::Log(param350.at(c).at(i));
+	paramerror350_sorted[c]=TMath::Log(paramerror350.at(c).at(i));
+	param650_sorted[c]=TMath::Log(param650.at(c).at(i));
+	paramerror650_sorted[c]=TMath::Log(paramerror650.at(c).at(i));
+	param800_sorted[c]=TMath::Log(param800.at(c).at(i));
+	paramerror800_sorted[c]=TMath::Log(paramerror800.at(c).at(i));
+	param1000_sorted[c]=TMath::Log(param1000.at(c).at(i));
+	paramerror1000_sorted[c]=TMath::Log(paramerror1000.at(c).at(i));
+      }
+      else if (i==1) {          //if MeanCB, plot mean_CB/Higgs_mass
 	param350_sorted[c]=param350.at(c).at(i)/350.;
 	paramerror350_sorted[c]=paramerror350.at(c).at(i)/350.;
 	param650_sorted[c]=param650.at(c).at(i)/650.;
@@ -1424,7 +1509,7 @@ int main(int argc, char *argv[])
    gr_D -> GetYaxis() -> SetTitle("value");
    gr_D -> GetXaxis () -> CenterTitle ();
    gr_D -> GetYaxis () -> CenterTitle ();
-   gr_D -> GetXaxis () -> SetRangeUser (0,1);
+   gr_D -> GetXaxis () -> SetRangeUser (0.001,1);
 
    gr_D -> SetLineColor (1);
    gr_D -> SetMarkerColor (1);
