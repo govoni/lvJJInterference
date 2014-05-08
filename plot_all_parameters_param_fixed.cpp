@@ -508,10 +508,10 @@ TF1 * FIT_madgraph_signal (TH1F * h_MWW_mg, double mass, double rangeScale, TStr
   l_leftTh->Draw ("same") ;
 
   c4_mg->Update () ;
-  c4_mg->Print (TString ("signals_mg_log") + suffix, "pdf") ;
+  c4_mg->Print (TString ("signals_mg_log") + suffix, "png") ;
 
   c4_mg->SetLogy (0) ;
-  c4_mg->Print (TString ("signals_mg_lin") + suffix, "pdf") ;
+  c4_mg->Print (TString ("signals_mg_lin") + suffix, "png") ;
 
   return func_mg_1 ;
 }
@@ -559,86 +559,58 @@ TF1 * FIT_phantom_signal (TH1F * diff, double mass, double rangeScale, TString s
 
   if (mass==350) {
 
-    func_ph_1->FixParameter(0,0.000522764+1.26749e-05*cprime);
-    func_ph_1->FixParameter(1,mass*(0.9998-0.000526754*cprime+0.000429871*cprime*cprime));
-    func_ph_1->FixParameter (2, 15.2*(0.0434105+0.275992*cprime+ 0.111858*cprime*cprime)) ;
-    func_ph_1->FixParameter (3, (1.6019+1.34857*cprime+ 3.80686*cprime*cprime)/func_ph_1->GetParameter(2)) ;
-     func_ph_1->FixParameter (4, 3.01792-0.20986*cprime);
-     func_ph_1->FixParameter (5,(1.38731+1.66355*cprime+3.34638*cprime*cprime)/func_ph_1->GetParameter(2));
-    func_ph_1->FixParameter (6, 0.951259+2.70427*cprime-1.45487*cprime*cprime);
-    func_ph_1->FixParameter (7, 0.373521-1.0953*cprime+0.83187*cprime*cprime);
-    func_ph_1->FixParameter (8, 9.49906);
+    func_ph_1->SetParameter(0,0.000433428+8.80617e-05*cprime);
+    func_ph_1->FixParameter(1,mass*(0.999716+2.00238e-05*cprime));
+    func_ph_1->FixParameter (2, 15.2*(0.0190926+0.384806*cprime)) ;
+    func_ph_1->FixParameter (3, (0.710543+5.00614*cprime)/func_ph_1->GetParameter(2)) ;
+    func_ph_1->FixParameter (4, 3.32443*(1-exp(-100.*cprime))+0.2565*cprime);
+     func_ph_1->FixParameter (5,( 0.670827+4.60148*cprime)/func_ph_1->GetParameter(2));
+      func_ph_1->FixParameter (6, 1.24122+2.22144*cprime);
+    func_ph_1->FixParameter (7, 0.00109501+ 0.0185918*cprime);
+    func_ph_1->FixParameter (8, 86.0005+25.3303*cprime);
 
   }
-
 
   else if (mass==650) {
 
-          func_ph_1->SetParameter (0, 1.01143e-05-7.26886e-07*cprime) ;  // multiplicative scale                                                
+          func_ph_1->SetParameter (0, 0.01*0.000433428+8.80617e-05*cprime) ;  // multiplicative scale                                                
       func_ph_1->SetParLimits (0, 0, 0.00006);
-      func_ph_1->SetParameter (7, 0.0345768+0.0776573*cprime-0.0450301*cprime*cprime);
-      //  func_ph_1->FixParameter(0,2.452662225*0.000522764+1.26749e-05*cprime);
-           func_ph_1->FixParameter(1,1.829695959*350*(0.9998-0.000526754*cprime+0.000429871*cprime*cprime));
-         func_ph_1->FixParameter (2, 10.184622795*15.2*(0.0434105+0.275992*cprime+ 0.111858*cprime*cprime)) ;
-	 func_ph_1->FixParameter (3, 10.184622795*1.245560777*(1.6019*(cprime/0.4)+1.34857*cprime+ 3.80686*cprime*cprime)/func_ph_1->GetParameter(2)) ;
-      func_ph_1->FixParameter (4, 1.140059648*(3.01792-0.20986*cprime));
-      func_ph_1->FixParameter (5, 10.184622795*0.783797687*(1.38731+1.66355*cprime+3.34638*cprime*cprime)/func_ph_1->GetParameter(2));
-      func_ph_1->FixParameter (6, 0.503901906*(0.951259+2.70427*cprime-1.45487*cprime*cprime));
-      //  func_ph_1->FixParameter (7, 8183.306333873*(0.373521-1.0953*cprime+0.83187*cprime*cprime));
-      func_ph_1->FixParameter (8, 9.49906*0.922339796);
+      func_ph_1->FixParameter (7, 1.1*(0.0587824+ 0.0412092*cprime));
+           func_ph_1->FixParameter(1,mass*(0.996825-0.0104439*cprime));
+         func_ph_1->FixParameter (2, 158*(0.0389309+0.329887*cprime)) ;
+	 func_ph_1->FixParameter (3, 10.184622795*1.245560777*(0.710543+5.00614*cprime)/func_ph_1->GetParameter(2)) ;
+	 func_ph_1->FixParameter (4,1.140059648*(3.32443*(1-exp(-3.*cprime))+0.2565*cprime));
+      func_ph_1->FixParameter (5, 10.184622795*0.783797687*( 0.670827+4.60148*cprime)/func_ph_1->GetParameter(2));
+      func_ph_1->FixParameter (6, ((350/(1.*mass))*1.24122+(1+(350/(1.*mass)))*2.22144*cprime));
+      func_ph_1->FixParameter (8, 0.922339796*(86.0005+25.3303*cprime));
+
   }
-
-
 
   else if (mass==800) {
 
-      func_ph_1->SetParameter (0, diff->GetBinContent (diff->GetMaximumBin ())) ;  // multiplicative scale                                                
-      func_ph_1->SetParLimits (0, 0,0.00006) ;  // multiplicative scale                                                
-
-      func_ph_1->SetParameter (0, 1.01143e-05-7.26886e-07*cprime) ;  // multiplicative scale                                                
-      func_ph_1->SetParLimits (0, 0, 0.00006);
-      func_ph_1->SetParameter (7, 0.8);
-      func_ph_1->SetParLimits (7, 0.7,0.9);
-
-      //  func_ph_1->FixParameter(0,2.452662225*0.000522764+1.26749e-05*cprime);
-      func_ph_1->FixParameter(1,2.21241674*350*(0.9998-0.000526754*cprime+0.000429871*cprime*cprime));
-      func_ph_1->FixParameter (2, 17.975800457*15.2*(0.0434105+0.275992*cprime+ 0.111858*cprime*cprime)) ;
-      func_ph_1->FixParameter (3, 17.975800457*1.337807637*(1.6019*(cprime/0.4)+1.34857*cprime+ 3.80686*cprime*cprime)/func_ph_1->GetParameter(2)) ;
-      func_ph_1->FixParameter (4, 1.210214476*(3.01792-0.20986*cprime));
-      //      func_ph_1->FixParameter (4, 3.986096915*(3.01792-0.20986*cprime));
-      func_ph_1->FixParameter (5, 17.975800457*0.450978771*(1.38731+1.66355*cprime+3.34638*cprime*cprime)/func_ph_1->GetParameter(2));
-      func_ph_1->FixParameter (6, 0.547154795*(0.951259+2.70427*cprime-1.45487*cprime*cprime));
-      //      func_ph_1->FixParameter (6, 5.714158062*(0.951259+2.70427*cprime-1.45487*cprime*cprime));
-      //  func_ph_1->FixParameter (7, 8183.306333873*(0.373521-1.0953*cprime+0.83187*cprime*cprime));
-      func_ph_1->FixParameter (8, 9.49906*1.691172375);
-
+    func_ph_1->SetParameter (0, 0.005250714*(0.000433428+8.80617e-05*cprime)) ;  // multiplicative scale                                                
+       func_ph_1->FixParameter (7, 0.01*(0.0587824+ 0.0412092*cprime));
+           func_ph_1->FixParameter(1,mass*(0.994242-0.0305097*cprime));
+	   func_ph_1->FixParameter (2, 304*(0.0232355+0.310422*cprime)) ;
+	 func_ph_1->FixParameter (3, 17.975800457*1.337807637*(0.710543+5.00614*cprime)/func_ph_1->GetParameter(2)) ;
+	   func_ph_1->FixParameter (4,1.210214476*(3.32443*(1-exp(-2.*cprime))+0.2565*cprime));
+      func_ph_1->FixParameter (5, 17.975800457*0.450978771*( 0.670827+4.60148*cprime)/func_ph_1->GetParameter(2));
+      func_ph_1->FixParameter (6, ((350/(1.*mass))*1.24122+(1+(350/(1.*mass)))*2.22144*cprime));
+      func_ph_1->FixParameter (8, 1.691172375*(86.0005+25.3303*cprime));
   }
-
 
   if (mass==1000) {
 
-      func_ph_1->SetParameter (0, diff->GetBinContent (diff->GetMaximumBin ())) ;  // multiplicative scale                                                
-            func_ph_1->SetParLimits (0, 0,0.00006) ;  // multiplicative scale                                                
-	    //   func_ph_1->SetParLimits (0, 0,1) ;  // multiplicative scale                                                
-
-      func_ph_1->SetParameter (7, 0.9);
-      func_ph_1->SetParLimits (7, 0.8,0.99);
-
-      //  func_ph_1->FixParameter(0,2.452662225*0.000522764+1.26749e-05*cprime);
-      func_ph_1->FixParameter(1,2.573951043*350*(0.9998-0.000526754*cprime+0.000429871*cprime*cprime));
-      func_ph_1->FixParameter (2, 38.237893051*15.2*(0.0434105+0.275992*cprime+ 0.111858*cprime*cprime)) ;
-      //  func_ph_1->FixParameter (3, 38.237893051*5.734272914*(1.6019+1.34857*cprime+ 3.80686*cprime*cprime)/func_ph_1->GetParameter(2)) ;
-      func_ph_1->FixParameter (3, 38.237893051*1.448843834*(1.6019*(cprime/0.4)+1.34857*cprime+ 3.80686*cprime*cprime)/func_ph_1->GetParameter(2)) ;
-          func_ph_1->FixParameter (4, 1.303137708*(3.01792-0.20986*cprime));
-	    //      func_ph_1->FixParameter (4, 1.303137708*(-0.27124+6.94544*cprime));
-      //     func_ph_1->FixParameter (4, 4.433854146*(3.01792-0.20986*cprime));
-      func_ph_1->FixParameter (5, 38.237893051*0.306200874*(1.38731+1.66355*cprime+3.34638*cprime*cprime)/func_ph_1->GetParameter(2));
-      //   func_ph_1->FixParameter (5, 38.237893051*6.197444448*(1.38731+1.66355*cprime+3.34638*cprime*cprime)/func_ph_1->GetParameter(2));
-      func_ph_1->FixParameter (6, 0.599341438*(0.951259+2.70427*cprime-1.45487*cprime*cprime));
-      //  func_ph_1->FixParameter (7, 8183.306333873*(0.373521-1.0953*cprime+0.83187*cprime*cprime));
-      func_ph_1->FixParameter (8, 9.49906*1.625873857);
-
-
+          func_ph_1->SetParameter (0, 0.01*0.000433428+8.80617e-05*cprime) ;  // multiplicative scale                                                
+      func_ph_1->SetParLimits (0, 0, 0.00006);
+             func_ph_1->FixParameter (7, 0.0001*(0.0587824+ 0.0412092*cprime));
+           func_ph_1->FixParameter(1,mass*(0.983497-0.126495*cprime));
+         func_ph_1->FixParameter (2, 647*(0.052344+0.273591*cprime)) ;
+	 func_ph_1->FixParameter (3, 38.237893051*1.448843834*(0.710543+5.00614*cprime)/func_ph_1->GetParameter(2)) ;
+	 func_ph_1->FixParameter (4,1.303137708*(3.32443*(1-exp(-2.*cprime))+0.2565*cprime));
+	   func_ph_1->FixParameter (5, 38.237893051*0.599341438*( 0.670827+4.60148*cprime)/func_ph_1->GetParameter(2));
+      func_ph_1->FixParameter (6, ((350/(1.*mass))*1.24122+(1+(350/(1.*mass)))*2.22144*cprime));
+      func_ph_1->FixParameter (8, 1.625873857*(86.0005+25.3303*cprime));
 }
  
     
@@ -732,103 +704,6 @@ double crystalBallLowHighWithRise (double* x, double* par)
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
-//PG left rise
-TF1 * FIT_phantom_signal_2 (TH1F * diff, double mass, double rangeScale, TString suffix, bool useLikelihood = false)
-{  
- TCanvas * c4_ph = new TCanvas ("c4_ph", "c4_ph") ;
-
-  //PG first fit: get the width for the second fit
-  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
- 
-  TF1 * gauss_ph = new TF1 ("gauss_ph", "gaus", 0, 2000) ;
-  gauss_ph->SetNpx (10000) ;
-  gauss_ph->SetLineWidth (1) ;
-  gauss_ph->SetLineColor (kGray + 2) ;
-  gauss_ph->SetParameter (1, mass) ;
-  gauss_ph->SetParameter (2, 0.5 * diff->GetRMS ()) ;
-  double fact = 1. ;
-  double span = min (fact * fabs (diff->GetRMS ()), 0.5 * mass) ;
-  diff->Fit ("gauss_ph", "+", "", mass - span , mass + span) ;
-
-  //PG preliminary fit of the left rise
-  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-  
-  TF1 * f_leftRise = new TF1 ("f_leftRise", leftRise, 181, 2000, 2) ;
-  f_leftRise->SetNpx (10000) ;
-  f_leftRise->SetLineWidth (1) ;
-  f_leftRise->SetLineColor (kOrange + 2) ;
-  f_leftRise->SetParLimits (0, 0., 10000.) ;
-  double N = (1.5 - 4) / (800. - 500.) * (mass - 500.) + 4 ;
-  double riseLimit = mass - N * gauss_ph->GetParameter (2) ;
-  diff->Fit ("f_leftRise", "+", "", 180., riseLimit) ;
-
-  //PG second fit: first with chisq, if requested with likelihood also
-  //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
- 
-  TF1 * func_ph_1 = new TF1 ("func_ph_1", crystalBallLowHighWithRise, 0, 2000, 9) ;
-  func_ph_1->SetNpx (10000) ;
-  func_ph_1->SetLineWidth (1) ;
-  func_ph_1->SetLineColor (kRed + 1) ;
-  
-  setParNamesdoubleGausCrystalBallLowHigh (func_ph_1) ;
-
-  func_ph_1->SetParameter (0, diff->Integral ()) ;                //PG multiplicative scale
-  func_ph_1->SetParameter (1, mass) ;                             //PG mean
-  func_ph_1->SetParameter (2, 2 * gauss_ph->GetParameter (2)) ;   //PG gaussian sigma
-  func_ph_1->SetParLimits (2, 0., mass) ;                         
-  func_ph_1->SetParameter (3, 1) ;                                //PG right junction
-  func_ph_1->SetParLimits (3, 0.1, 5) ;                           //PG right junction
-  func_ph_1->FixParameter (4, 3) ;                                //PG right power law order            //PG NB THIS IS FIXED
-  func_ph_1->FixParameter (5, 1) ;                                //PG left junction                    //PG NB THIS IS FIXED
-  func_ph_1->FixParameter (6, 3) ;                                //PG left power law order             //PG NB THIS IS FIXED
-  func_ph_1->FixParameter (7, f_leftRise->GetParameter (0)) ;     //PG from the first fit to the rise
-  func_ph_1->FixParameter (8, f_leftRise->GetParameter (1)) ;     //PG from the first fit to the rise
-
-  std::cout << "-------------------\nFITTING THE PHANTOM SIGNAL with left turn on \n\n-------------------\n" ;
-//  diff->Fit ("func_ph_1", "", "", 0.5 * mass - 50, 2 * mass) ;
-  diff->Fit ("func_ph_1", "", "", 200., 2 * mass) ;
-  if (useLikelihood)
-    {
-      std::cout << "-------------------\nFITTING THE PHANTOM SIGNAL W/ LIKELIHOOD with left turn on\n\n-------------------\n" ;
-      func_ph_1->SetParameters (func_ph_1->GetParameters ()) ;
-      func_ph_1->SetLineColor (kRed + 3) ;
-//      diff->Fit ("func_ph_1", "L+", "", 0.5 * mass - 50, 1.5 * mass) ;
-      diff->Fit ("func_ph_1", "L+", "", 200., 1.5 * mass) ;
-    }
-    
-  double ymax = diff->GetBinContent (diff->GetMaximumBin ()) ;
-  double ymin = diff->GetBinContent (diff->GetMinimumBin ()) ;
-  TH1F * c4_ph_frame = (TH1F *) c4_ph->DrawFrame (200, 0.9 * ymin, rangeScale * mass, 1.1 * ymax) ;
-  c4_ph_frame->SetTitle (0) ;
-  c4_ph_frame->SetStats (0) ;
-  c4_ph_frame->GetXaxis ()->SetTitle ("m_{WW} (GeV)") ;
-  gauss_ph->Draw ("same") ;
-  diff->Draw ("EPsame") ;
-
-  //PG limits of the gaussian core
-  double rightTh_ph = fabs (func_ph_1->GetParameter (3)) * fabs (func_ph_1->GetParameter (2)) + func_ph_1->GetParameter (1) ;
-  double leftTh_ph  = -1 * fabs (func_ph_1->GetParameter (5)) * fabs (func_ph_1->GetParameter (2)) + func_ph_1->GetParameter (1) ;
-  TLine * l_rightTh_ph = new TLine (rightTh_ph, 0.9 * ymin, rightTh_ph, 1.1 * ymax) ;
-  l_rightTh_ph->SetLineColor (kRed) ;
-  l_rightTh_ph->Draw ("same") ;
-  TLine * l_leftTh_ph = new TLine (leftTh_ph, 0.9 * ymin, leftTh_ph, 1.1 * ymax) ;
-  l_leftTh_ph->SetLineColor (kRed) ;
-  l_leftTh_ph->Draw ("same") ;
-
-  //PG limit of the prefit for the tail
-  TLine * l_riseLimit = new TLine (riseLimit, 0.9 * ymin, riseLimit, 1.1 * ymax) ;
-  l_riseLimit->SetLineColor (kOrange + 2) ;
-  l_riseLimit->SetLineStyle (2) ;
-  gauss_ph->Draw ("same") ;
-  l_riseLimit->Draw ("same") ;
-  f_leftRise->Draw ("same") ;
-
-  c4_ph->Print (TString ("signals_ph_lin_leftTail") + suffix, "pdf") ;
-
-  return func_ph_1 ;
-}
-
-
 // ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
 // ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
 
@@ -850,7 +725,7 @@ int macro_findInterferece (string filename, double mass, std::vector<double> & p
   int reBin = initialRebin ;
   if      (mass > 310 && mass < 610) reBin *= 2 ;
   else if (mass > 610 && mass < 790) reBin *= 8 ;
-  else if (mass > 790 && mass < 860 && cprime==1.) reBin *= 20 ;
+  //  else if (mass > 790 && mass < 860 && cprime==1.) reBin *= 20 ;
   else if (mass > 790 && mass < 860) reBin *= 8 ;
   else if (mass > 860)               reBin *= 20 ;
   double rangeScale = 1.5 ; // for plotting purposes
@@ -949,7 +824,7 @@ int macro_findInterferece (string filename, double mass, std::vector<double> & p
 
   
   //PG initial spectra ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-  /*
+  
   TCanvas * c1 = new TCanvas ("c1", "c1") ;
   ymax = h_MWW_phbkgsig->GetBinContent (h_MWW_phbkgsig->GetMaximumBin ()) ;
   ymin = h_MWW_mg->GetBinContent (findBin (h_MWW_mg, mass + exp (mass * 0.0058461 + 0.65385))) ;
@@ -962,7 +837,7 @@ int macro_findInterferece (string filename, double mass, std::vector<double> & p
   h_MWW_phbkgsig->Draw ("histsame") ;
   h_MWW_mg->Draw ("histsame") ;
 
-  c1_leg = new TLegend (0.6,0.8,0.9,0.95) ;
+  TLegend * c1_leg = new TLegend (0.6,0.8,0.9,0.95) ;
   c1_leg->SetFillStyle (0) ;
   c1_leg->SetBorderSize (0) ;
   c1_leg->SetTextFont (42) ;
@@ -971,11 +846,11 @@ int macro_findInterferece (string filename, double mass, std::vector<double> & p
   c1_leg->AddEntry (h_MWW_mg, "S","l") ;
   c1_leg->Draw () ;
   
-  c1->Print (TString ("spectra") + suffix, "pdf") ;
-  */
+  c1->Print (TString ("spectra") + suffix, "png") ;
+  
   //PG S only ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
-  //  TF1 * func_mg_1 = FIT_madgraph_signal (h_MWW_mg, mass, rangeScale, suffix, true) ;
+  TF1 * func_mg_1 = FIT_madgraph_signal (h_MWW_mg, mass, rangeScale, suffix, false) ;
 
   //PG (SBI - B) only ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
@@ -1278,7 +1153,7 @@ int main(int argc, char *argv[])
   call_fit(1000, "1000", param1000, paramerror1000);
 
 
-    TString parameters [9] = {"Log_Norm","Mean_CB_over_Higgs_mass","Sigma_CB_over_Higgs_width","alphaR_CB_times_Sigma_CB","nR_CB","alphaL_CB_times_Sigma_CB","nL_CB","R","Tau"};
+    TString parameters [9] = {"Norm","Mean_CB_over_Higgs_mass","Sigma_CB_over_Higgs_width","alphaR_CB_times_Sigma_CB","nR_CB","alphaL_CB_times_Sigma_CB","nL_CB","R","Tau"};
     // TString parameters [9] = {"Norm","Mean_CB_over_Higgs_mass","Sigma_CB_over_Higgs_width","alphaR_CB_times_Sigma_CB","nR_CB","alphaL_CB_times_Sigma_CB","nL_CB","R","Tau"};
   TString parameters_normal [9] = {"Norm","Mean_CB","Sigma_CB","alphaR_CB","nR_CB","alphaL_CB","nL_CB","R","Tau"};
   double min[9] = {-16,0.8,0,0,0,0,0,0,0};
