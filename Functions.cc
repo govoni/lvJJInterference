@@ -96,26 +96,77 @@ double doubleGausCrystalBallLowHighPlusExp (double* x, double* par) {
   double A = pow(n/fabs(alpha), n) * exp(-0.5 * alpha*alpha);
   double B = n/fabs(alpha) - fabs(alpha);
 
-  return par[0] * ( A * pow(B + (xx-mean)/sigmaP, -1.*n) + R * exp(-xx/tau));
+  return par[0] * ( (1-R)*(A * pow(B + (xx-mean)/sigmaP, -1.*n)) + R * exp(-xx/tau));
  }
 
   else if ((xx-mean)/sigmaN < -1.*fabs(alpha2)) {
   double A = pow(n2/fabs(alpha2), n2) * exp(-0.5 * alpha2*alpha2);
   double B = n2/fabs(alpha2) - fabs(alpha2);
 
-  return par[0] * ( A * pow(B - (xx-mean)/sigmaN, -1.*n2) + R * exp(-xx/tau));
+  return par[0] * ( (1-R)*(A * pow(B - (xx-mean)/sigmaN, -1.*n2)) + R * exp(-xx/tau));
   }
 
  else if ((xx-mean) > 0) {
-  return par[0] * ( exp(-1. * (xx-mean)*(xx-mean) / (2*sigmaP*sigmaP) ) + R * exp(-xx/tau));
+   return par[0] * ( (1-R)*exp(-1. * (xx-mean)*(xx-mean) / (2*sigmaP*sigmaP) ) + R * exp(-xx/tau));
   }
 
  else {
-  return par[0] * ( exp(-1. * (xx-mean)*(xx-mean) / (2*sigmaN*sigmaN) ) + R * exp(-xx/tau));
+   return par[0] * ( (1-R)*exp(-1. * (xx-mean)*(xx-mean) / (2*sigmaN*sigmaN) ) + R * exp(-xx/tau));
  }
 
 }
 
+
+
+// ----------------------------------------------------------------------------------------------
+
+/*** double crystall ball ***/
+double doubleGausCrystalBallLowHigh (double* x, double* par)
+{
+  //[0] = N
+  //[1] = mean
+  //[2] = sigma
+  //[3] = alpha
+  //[4] = n
+  //[5] = alpha2
+  //[6] = n2
+
+  double xx = x[0];
+  double mean   = par[1] ; // mean
+  double sigmaP = par[2] ; // sigma of the positive side of the gaussian
+  double sigmaN = par[3] ; // sigma of the negative side of the gaussian
+  double alpha  = par[4] ; // junction point on the positive side of the gaussian
+  double n      = par[5] ; // power of the power law on the positive side of the gaussian
+  double alpha2 = par[6] ; // junction point on the negative side of the gaussian
+  double n2     = par[7] ; // power of the power law on the negative side of the gaussian
+
+  if ((xx-mean)/sigmaP > fabs(alpha))
+  {
+    double A = pow(n/fabs(alpha), n) * exp(-0.5 * alpha*alpha);
+    double B = n/fabs(alpha) - fabs(alpha);
+    
+    return par[0] * A * pow(B + (xx-mean)/sigmaP, -1.*n);
+  }
+  
+  else if ((xx-mean)/sigmaN < -1.*fabs(alpha2))
+  {
+    double A = pow(n2/fabs(alpha2), n2) * exp(-0.5 * alpha2*alpha2);
+    double B = n2/fabs(alpha2) - fabs(alpha2);
+    
+    return par[0] * A * pow(B - (xx-mean)/sigmaN, -1.*n2);
+  }
+  
+  else if ((xx-mean) > 0)
+  {
+    return par[0] * exp(-1. * (xx-mean)*(xx-mean) / (2*sigmaP*sigmaP) );
+  }
+  
+  else
+  {
+    return par[0] * exp(-1. * (xx-mean)*(xx-mean) / (2*sigmaN*sigmaN) );
+  }
+  
+}
 
 
 // ----------------------------------------------------------------------------------------------
@@ -489,6 +540,29 @@ double breitWigner(double* x, double* par)
   double norm = M*M*G*G;
   
   return par[0] * norm / ( pow((xx*xx-M*M),2) + M*M*G*G );
+}
+
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+/*** breit-wigner ***/
+double RelBreitWigner(double* x, double* par)
+{
+  //[0] = N
+  //[1] = mass
+  //[2] = width
+  
+  double xx = x[0];
+  double N = par[0];
+  double M = par[1];
+  double G = par[2];
+  
+  //double gamma = sqrt(M*M*(M*M+G*G));
+  //double norm = 2*sqrt(2)*M*G*gamma/(3.14159*sqrt(M*M+gamma));
+  double norm = M*M*G*G;
+  
+  return N*(xx*xx*G/M) / ( pow((xx*xx-M*M),2) + pow(xx*xx*G/M,2) );
 }
 
 
