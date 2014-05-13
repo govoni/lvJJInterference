@@ -27,11 +27,18 @@
 #include "TSystem.h"
 #include "TStyle.h"
 #include "TMath.h"
+#include "TGraph2D.h"
 
 using namespace std;
 
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
+TF1 *func_mg_2, *f_ratio2;
+
+double corr_sign (double *x, double *par)
+{
+  return (func_mg_2->EvalPar(x,par))*(f_ratio2->EvalPar(x,par)); 
+}
 
 double max (double uno, double due)
 {
@@ -94,53 +101,7 @@ double min (double uno, double due)
 */
 
 
-/*** double crystall ball ***/
-double doubleGausCrystalBallLowHigh (double* x, double* par)
-{
-  //[0] = N
-  //[1] = mean
-  //[2] = sigma
-  //[3] = alpha
-  //[4] = n
-  //[5] = alpha2
-  //[6] = n2
 
-  double xx = x[0];
-  double mean   = par[1] ; // mean
-  double sigmaP = par[2] ; // sigma of the positive side of the gaussian
-  double sigmaN = par[3] ; // sigma of the negative side of the gaussian
-  double alpha  = par[4] ; // junction point on the positive side of the gaussian
-  double n      = par[5] ; // power of the power law on the positive side of the gaussian
-  double alpha2 = par[6] ; // junction point on the negative side of the gaussian
-  double n2     = par[7] ; // power of the power law on the negative side of the gaussian
-
-  if ((xx-mean)/sigmaP > fabs(alpha))
-  {
-    double A = pow(n/fabs(alpha), n) * exp(-0.5 * alpha*alpha);
-    double B = n/fabs(alpha) - fabs(alpha);
-    
-    return par[0] * A * pow(B + (xx-mean)/sigmaP, -1.*n);
-  }
-  
-  else if ((xx-mean)/sigmaN < -1.*fabs(alpha2))
-  {
-    double A = pow(n2/fabs(alpha2), n2) * exp(-0.5 * alpha2*alpha2);
-    double B = n2/fabs(alpha2) - fabs(alpha2);
-    
-    return par[0] * A * pow(B - (xx-mean)/sigmaN, -1.*n2);
-  }
-  
-  else if ((xx-mean) > 0)
-  {
-    return par[0] * exp(-1. * (xx-mean)*(xx-mean) / (2*sigmaP*sigmaP) );
-  }
-  
-  else
-  {
-    return par[0] * exp(-1. * (xx-mean)*(xx-mean) / (2*sigmaN*sigmaN) );
-  }
-  
-}
 
 
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -389,7 +350,7 @@ double ratio_crystalBallLowHighWithRise (double* x, double* par)
 {
   double den = crystalBallLowHigh (x, par + 9) ; // signal only
   if (den == 0) return -1. ;
-  double num = crystalBallLowHighWithRise (x, par) ;    // signal and interference
+  double num = doubleGausCrystalBallLowHighPlusExp (x, par) ;    // signal and interference
   return num / den ;
 }
 
@@ -435,15 +396,15 @@ TF1 * FIT_madgraph_signal (TH1F * h_MWW_mg, double mass, double rangeScale, TStr
   gauss_mg->SetLineWidth (1) ;
   gauss_mg->SetLineColor (kGray + 2) ;
   gauss_mg->SetParameter(1,mass);
-  h_MWW_mg->Fit ("gauss_mg", "+", "", mass - 1. * h_MWW_mg->GetRMS () , mass + 1. * h_MWW_mg->GetRMS ()) ;
+  //  h_MWW_mg->Fit ("gauss_mg", "+", "", mass - 1. * h_MWW_mg->GetRMS () , mass + 1. * h_MWW_mg->GetRMS ()) ;
 
 
-  TH1F * h_MWW_mg_error = (TH1F*)h_MWW_mg->Clone ("h_MWW_mg_error") ;
+  /*  TH1F * h_MWW_mg_error = (TH1F*)h_MWW_mg->Clone ("h_MWW_mg_error") ;
   (TVirtualFitter::GetFitter ())->GetConfidenceIntervals (h_MWW_mg_error, 0.68) ;
   h_MWW_mg_error->SetMarkerSize (0) ;
   h_MWW_mg_error->SetFillColor (kAzure - 9) ;
   h_MWW_mg_error->SetFillStyle (3003) ;
-
+  */
   
   //PG second fit: first with chisq, if requested with likelihood also
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -456,13 +417,51 @@ TF1 * FIT_madgraph_signal (TH1F * h_MWW_mg, double mass, double rangeScale, TStr
   setParNamesdoubleGausCrystalBallLowHigh (func_mg_1) ;
 
   func_mg_1->SetParameter (0, h_MWW_mg->GetBinContent (h_MWW_mg->GetMaximumBin ())) ;  // multiplicative scale
-  func_mg_1->FixParameter (1, gauss_mg->GetParameter(1)) ;                                                  // mean
-  func_mg_1->SetParameter (2, gauss_mg->GetParameter (2)) ;                            // gaussian sigma
-  func_mg_1->SetParLimits (2, 0.01 * h_MWW_mg->GetRMS (), 20 * h_MWW_mg->GetRMS ()) ;
-  func_mg_1->SetParameter (3, 1.5) ;                                                   // right junction
-  func_mg_1->SetParameter (4, 2) ;                                                     // right power law order
-  func_mg_1->SetParameter (5, 0.95) ;                                                  // left junction
-  func_mg_1->SetParameter (6, 2.38) ;                                                  // left power law order
+  if (mass==350)   
+  {
+    func_mg_1->FixParameter(1,350.58);
+    func_mg_1->FixParameter(2,6.78);
+    func_mg_1->FixParameter(3,1.10);
+    func_mg_1->FixParameter(4,1.57);
+    func_mg_1->FixParameter(5,1.11);
+    func_mg_1->FixParameter(6,2.71);
+  }
+
+  else if (mass==650)   
+  {
+    func_mg_1->FixParameter(1,663.58);
+    func_mg_1->FixParameter(2,62.44);
+    func_mg_1->FixParameter(3,0.80);
+    func_mg_1->FixParameter(4,3.01);
+    func_mg_1->FixParameter(5,0.92);
+    func_mg_1->FixParameter(6,100);
+  }
+
+  else if (mass==800)   
+  {
+    func_mg_1->FixParameter(1,820.14);
+    func_mg_1->FixParameter(2,117.22);
+    //  func_mg_1->SetParLimits(2,116,118);
+    func_mg_1->FixParameter(3,0.79);
+    // func_mg_1->SetParLimits(3,0.75,0.8);
+    func_mg_1->FixParameter(4,6.78);
+    // func_mg_1->SetParLimits(4,6.5,6.9);
+    func_mg_1->FixParameter(5,1.19);
+    // func_mg_1->SetParLimits(5,1.15,1.24);
+    func_mg_1->FixParameter(6,147);
+    // func_mg_1->SetParLimits(6,140,150);
+  }
+
+  else if (mass==1000)   
+  {
+    func_mg_1->FixParameter(1,1044);
+    func_mg_1->FixParameter(2,221);
+    func_mg_1->FixParameter(3,0.91);
+    func_mg_1->FixParameter(4,100);
+    func_mg_1->FixParameter(5,1.45);
+    func_mg_1->FixParameter(6,100);
+  }
+
 
   //PG set the range of the fit
   int sign = 1 ;
@@ -470,7 +469,7 @@ TF1 * FIT_madgraph_signal (TH1F * h_MWW_mg, double mass, double rangeScale, TStr
   if (mass > 700) sign = -1.5 ;
   if (mass > 850) sign = -1. ;
   std::cout << "-------------------\nFITTING THE MADGRAPH SIGNAL\n\n-------------------\n" ;
-  TFitResultPtr result = h_MWW_mg->Fit ("func_mg_1", "+L", "", 100, 2 * mass) ;
+  TFitResultPtr result = h_MWW_mg->Fit ("func_mg_1", "+", "", 100, 2 * mass) ;
   //  TFitResultPtr result = h_MWW_mg->Fit ("func_mg_1", "+L", "", 0.5 * mass + sign * 50, 2 * mass) ;
   if (useLikelihood && mass < 800)
     {
@@ -481,13 +480,24 @@ TF1 * FIT_madgraph_signal (TH1F * h_MWW_mg, double mass, double rangeScale, TStr
     }
 
 
+  TH1F * h_MWW_mg_error = (TH1F*)h_MWW_mg->Clone ("h_MWW_mg_error") ;
+  (TVirtualFitter::GetFitter ())->GetConfidenceIntervals (h_MWW_mg_error, 0.68) ;
+  h_MWW_mg_error->SetMarkerSize (0) ;
+  h_MWW_mg_error->SetFillColor (kBlue) ;
+  h_MWW_mg_error->SetFillStyle (3002) ;
+
+
   //PG plotting the result
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
  
   double ymax = h_MWW_mg->GetBinContent (h_MWW_mg->GetMaximumBin ()) ;
   double ymin = h_MWW_mg->GetBinContent (h_MWW_mg->GetMinimumBin ()) ;
   if (ymin <= 0) ymin = ymax / 10000. ; 
-  TH1F * c4_mg_frame = (TH1F *) c4_mg->DrawFrame (200, 0.9 * ymin, rangeScale * mass, 1.1 * ymax) ;
+  TH1F *c4_mg_frame;
+  if (mass==350)
+    c4_mg_frame = (TH1F *) c4_mg->DrawFrame (320, 0.9 * ymin, 380, 1.1 * ymax) ;
+  else
+    c4_mg_frame = (TH1F *) c4_mg->DrawFrame (200, 0.9 * ymin, rangeScale * mass, 1.1 * ymax) ;
   c4_mg->SetLogy () ;
   c4_mg_frame->SetTitle (0) ;
   c4_mg_frame->SetStats (0) ;
@@ -557,6 +567,38 @@ TF1 * FIT_phantom_signal (TH1F * diff, double mass, double rangeScale, TString s
   
   setParNamesdoubleGausCrystalBallLowHigh (func_ph_1) ;
 
+
+  /*	double width = 0.;
+
+	if (mass==350)  width=15.2;
+	else if (mass==650)  width=158.;
+	else if (mass==800)  width=304.;
+	else if (mass==1000) width=647.;
+
+          func_ph_1->SetParameter (0, 0.01*0.000433428+8.80617e-05*cprime) ;  // multiplicative scale                                                
+      func_ph_1->SetParLimits (0, 0, 0.006);
+      func_ph_1->SetParameter (7, 1.1*(0.0587824+ 0.0412092*cprime));
+	func_ph_1->SetParLimits (7,0,0.1);
+
+    func_ph_1->FixParameter(1,mass*(1+(0.177504-0.00103068*mass+1.90992e-06*mass*mass-1.18324e-09*mass*mass*mass)*cprime));
+        func_ph_1->FixParameter (2, width*((0.00416317+4.1768e-05*mass)+(0.443076-0.000169142*mass)*cprime)) ;
+	func_ph_1->FixParameter (3, (21.6235-0.107433*mass+0.000140711*mass*mass-0.25)*(0.710543+5.00614*cprime)/func_ph_1->GetParameter(2)) ;
+	 func_ph_1->FixParameter (4,(0.836811+0.000466488*mass)*(3.32443*(1-exp((-268.667+0.986813*mass-0.00120366*mass*mass+4.83516e-07*mass*mass*mass)*cprime))+0.2565*cprime));
+      func_ph_1->FixParameter (5, (8.5992-0.0386763*mass+5.21299e-05*mass*mass-0.44)*( 0.670827+4.60148*cprime)/func_ph_1->GetParameter(2));
+      func_ph_1->FixParameter (6, ((350/(1.*mass))*1.24122+(0.620881+0.000332256*mass+1.95247e-06*mass*mass)*2.22144*cprime));
+     func_ph_1->FixParameter (8, 86.0005+25.3303*cprime);
+
+
+     //	   func_ph_1->FixParameter (4,1.210214476*(3.32443*(1-exp(-2.*cprime))+0.2565*cprime));
+
+    //   func_ph_1->FixParameter (2, 158*(0.0389309+0.329887*cprime)) ;
+	 //	 func_ph_1->FixParameter (3, 10.184622795*1.245560777*(0.710543+5.00614*cprime)/func_ph_1->GetParameter(2)) ;
+	   //	 	 func_ph_1->FixParameter (4,1.140059648*(3.32443*(1-exp(-3.*cprime))+0.2565*cprime));
+		 //  func_ph_1->FixParameter (5, 10.184622795*0.783797687*( 0.670827+4.60148*cprime)/func_ph_1->GetParameter(2));
+		 //  func_ph_1->FixParameter (6, ((350/(1.*mass))*1.24122+(1+(350/(1.*mass)))*2.22144*cprime));
+		 //  func_ph_1->FixParameter (8, 86.0005+25.3303*cprime);
+		 */
+
   if (mass==350) {
 
     func_ph_1->SetParameter(0,0.000433428+8.80617e-05*cprime);
@@ -567,6 +609,7 @@ TF1 * FIT_phantom_signal (TH1F * diff, double mass, double rangeScale, TString s
      func_ph_1->FixParameter (5,( 0.670827+4.60148*cprime)/func_ph_1->GetParameter(2));
       func_ph_1->FixParameter (6, 1.24122+2.22144*cprime);
     func_ph_1->FixParameter (7, 0.00109501+ 0.0185918*cprime);
+    //    func_ph_1->SetParLimits (7, 0,1);
     func_ph_1->FixParameter (8, 86.0005+25.3303*cprime);
 
   }
@@ -576,13 +619,16 @@ TF1 * FIT_phantom_signal (TH1F * diff, double mass, double rangeScale, TString s
           func_ph_1->SetParameter (0, 0.01*0.000433428+8.80617e-05*cprime) ;  // multiplicative scale                                                
       func_ph_1->SetParLimits (0, 0, 0.00006);
       func_ph_1->FixParameter (7, 1.1*(0.0587824+ 0.0412092*cprime));
+      // func_ph_1->SetParLimits (7, 0,1);
            func_ph_1->FixParameter(1,mass*(0.996825-0.0104439*cprime));
          func_ph_1->FixParameter (2, 158*(0.0389309+0.329887*cprime)) ;
 	 func_ph_1->FixParameter (3, 10.184622795*1.245560777*(0.710543+5.00614*cprime)/func_ph_1->GetParameter(2)) ;
 	 func_ph_1->FixParameter (4,1.140059648*(3.32443*(1-exp(-3.*cprime))+0.2565*cprime));
       func_ph_1->FixParameter (5, 10.184622795*0.783797687*( 0.670827+4.60148*cprime)/func_ph_1->GetParameter(2));
       func_ph_1->FixParameter (6, ((350/(1.*mass))*1.24122+(1+(350/(1.*mass)))*2.22144*cprime));
-      func_ph_1->FixParameter (8, 0.922339796*(86.0005+25.3303*cprime));
+    func_ph_1->FixParameter (8, 86.0005+25.3303*cprime);
+
+    //      func_ph_1->FixParameter (8, 0.922339796*(86.0005+25.3303*cprime));
 
   }
 
@@ -590,13 +636,16 @@ TF1 * FIT_phantom_signal (TH1F * diff, double mass, double rangeScale, TString s
 
     func_ph_1->SetParameter (0, 0.005250714*(0.000433428+8.80617e-05*cprime)) ;  // multiplicative scale                                                
        func_ph_1->FixParameter (7, 0.01*(0.0587824+ 0.0412092*cprime));
+       // func_ph_1->SetParLimits (7, 0,1);
            func_ph_1->FixParameter(1,mass*(0.994242-0.0305097*cprime));
 	   func_ph_1->FixParameter (2, 304*(0.0232355+0.310422*cprime)) ;
 	 func_ph_1->FixParameter (3, 17.975800457*1.337807637*(0.710543+5.00614*cprime)/func_ph_1->GetParameter(2)) ;
 	   func_ph_1->FixParameter (4,1.210214476*(3.32443*(1-exp(-2.*cprime))+0.2565*cprime));
       func_ph_1->FixParameter (5, 17.975800457*0.450978771*( 0.670827+4.60148*cprime)/func_ph_1->GetParameter(2));
       func_ph_1->FixParameter (6, ((350/(1.*mass))*1.24122+(1+(350/(1.*mass)))*2.22144*cprime));
-      func_ph_1->FixParameter (8, 1.691172375*(86.0005+25.3303*cprime));
+          func_ph_1->FixParameter (8, 86.0005+25.3303*cprime);
+
+	  // func_ph_1->FixParameter (8, 1.691172375*(86.0005+25.3303*cprime));
   }
 
   if (mass==1000) {
@@ -604,18 +653,20 @@ TF1 * FIT_phantom_signal (TH1F * diff, double mass, double rangeScale, TString s
           func_ph_1->SetParameter (0, 0.01*0.000433428+8.80617e-05*cprime) ;  // multiplicative scale                                                
       func_ph_1->SetParLimits (0, 0, 0.00006);
              func_ph_1->FixParameter (7, 0.0001*(0.0587824+ 0.0412092*cprime));
+	     // func_ph_1->SetParLimits (7, 0,1);
            func_ph_1->FixParameter(1,mass*(0.983497-0.126495*cprime));
          func_ph_1->FixParameter (2, 647*(0.052344+0.273591*cprime)) ;
 	 func_ph_1->FixParameter (3, 38.237893051*1.448843834*(0.710543+5.00614*cprime)/func_ph_1->GetParameter(2)) ;
 	 func_ph_1->FixParameter (4,1.303137708*(3.32443*(1-exp(-2.*cprime))+0.2565*cprime));
 	   func_ph_1->FixParameter (5, 38.237893051*0.599341438*( 0.670827+4.60148*cprime)/func_ph_1->GetParameter(2));
       func_ph_1->FixParameter (6, ((350/(1.*mass))*1.24122+(1+(350/(1.*mass)))*2.22144*cprime));
-      func_ph_1->FixParameter (8, 1.625873857*(86.0005+25.3303*cprime));
+    func_ph_1->FixParameter (8, 86.0005+25.3303*cprime);
+
+    //      func_ph_1->FixParameter (8, 1.625873857*(86.0005+25.3303*cprime));
+
 }
  
     
-
-
      std::cout << "-------------------\nFITTING THE PHANTOM SIGNAL - mass: " << mass << "    cprime: " << cprime <<"\n\n-------------------\n" ;
   if (mass==350)
     diff->Fit ("func_ph_1", "+", "", 250, 450) ;
@@ -708,7 +759,7 @@ double crystalBallLowHighWithRise (double* x, double* par)
 // ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
 
 
-int macro_findInterferece (string filename, double mass, std::vector<double> & param, std::vector<double> & param_error, int initialRebin=1, double cprime=1., bool useLeftRise = false)
+int macro_findInterferece (string filename, double mass, std::vector<double> & param, std::vector<double> & param_error, std::vector<double> & param_mg, std::vector<double> & param_error_mg, int initialRebin=1, double cprime=1., bool useLeftRise = false)
 {        
 
   //    TVirtualFitter::SetDefaultFitter ("Minuit2") ;
@@ -787,6 +838,8 @@ int macro_findInterferece (string filename, double mass, std::vector<double> & p
       h_MWW_mg->Scale (maxSI / maxS) ;
     }
 
+  h_MWW_mg->Scale(1./cprime);
+
   //PG SBI - B
   TH1F * diff = (TH1F *) h_MWW_phbkgsig->Clone ("diff") ;
   diff->Add (h_MWW_phbkg, -1) ;
@@ -850,7 +903,18 @@ int macro_findInterferece (string filename, double mass, std::vector<double> & p
   
   //PG S only ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
-  TF1 * func_mg_1 = FIT_madgraph_signal (h_MWW_mg, mass, rangeScale, suffix, false) ;
+  func_mg_2 = FIT_madgraph_signal (h_MWW_mg, mass, rangeScale, suffix, false) ;
+
+  for (int i=0; i<7; i++) {
+    param_mg.push_back(func_mg_2->GetParameter(i));
+    param_error_mg.push_back(func_mg_2->GetParError(i));
+    //       std::cout<<param_mg.back()<<std::endl;
+    //  getchar();
+
+    //  std::std::cout<<param.at(i)<<" "<<param_error.at(i)<<std::endl;
+  }
+
+
 
   //PG (SBI - B) only ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
@@ -866,7 +930,6 @@ int macro_findInterferece (string filename, double mass, std::vector<double> & p
 
 
 
-  return(0);
   //PG (SBI - B) - S only   i.e   INTERFERENCE FIT 
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
   /*
@@ -900,7 +963,7 @@ int macro_findInterferece (string filename, double mass, std::vector<double> & p
 
   double aveWidth = 0.5 * sqrt (
       func_ph_1->GetParameter (2) * func_ph_1->GetParameter (2) +
-      func_mg_1->GetParameter (2) * func_mg_1->GetParameter (2)  
+      func_mg_2->GetParameter (2) * func_mg_2->GetParameter (2)  
     ) ;
   delta->Fit ("f_doublePeakModel", "+", "same", 0.5 * mass - 50, 2 * mass) ;
 
@@ -915,42 +978,113 @@ int macro_findInterferece (string filename, double mass, std::vector<double> & p
   TF1 * f_difference = new TF1 ("f_difference", diff_crystalBallLowHighWithRise, 0, 2000, 16) ;
   Double_t params_difference[16] ;
   func_ph_1->GetParameters (params_difference) ;
-  func_mg_1->GetParameters (params_difference + 9) ;
+  func_mg_2->GetParameters (params_difference + 9) ;
   f_difference->SetParameters (params_difference) ;
   f_difference->SetNpx (10000) ;
   f_difference->SetLineWidth (2) ;
-  f_difference->SetLineColor (kGray + 1) ;
+  f_difference->SetLineColor (kGray + 1) ;
   f_difference->Draw ("same") ;
 
   c3_leg->Draw () ;
 
   c3->Print (TString ("interf") + suffix, "pdf") ;
   */
+
   //PG (SBI - B) / S only   i.e   CORRECTION FACTOR
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
-  // TCanvas * c5 = new TCanvas ("c5", "c5") ;
-  /*  ymax = ratio->GetBinContent (ratio->GetMaximumBin ()) ;
+  //  ratio      ->Rebin (reBin) ;
+  // normaliseToBinWidth (ratio) ;
+
+
+  TCanvas * c5 = new TCanvas ("c5", "c5") ;
+  ymax = ratio->GetBinContent (ratio->GetMaximumBin ()) ;
   ymin = ratio->GetBinContent (ratio->GetMinimumBin ()) ;
-  if (ymin > 0) ymin *= 0.5 ;
-  else          ymin *= 1.5 ;
-  if (ymin < 0) ymin = - 0.1 ;
-  TH1F * c5_frame = (TH1F *) c5->DrawFrame (200, 0., rangeScale*mass, 12.) ;
+  //  if (ymin > 0) ymin *= 0.5 ;
+  // else          ymin *= 1.5 ;
+  //  if (ymin < 0) ymin = - 0.1 ;
+
+  if (mass==350) ymax=500;
+  else if (mass==650 || mass==800) ymax=2000;
+  else ymax=8000;
+
+  c5->SetLogy () ;
+
+  TH1F * c5_frame = (TH1F *) c5->DrawFrame (200, 0.001, rangeScale*mass, ymax) ;
   c5_frame->SetTitle (0) ;
   c5_frame->SetStats (0) ;
   c5_frame->GetXaxis ()->SetTitle ("m_{WW} (GeV)") ;
+
+  //  func_mg_2->FixParameter(2,func_mg_2->GetParameter(2)*cprime);
+
+  Double_t params_difference[16] ;
+  func_ph_1->GetParameters (params_difference) ;
+  func_mg_2->GetParameters (params_difference + 9) ;
   
-  ratio->Draw ("hist same") ;
+  ratio->Draw ("EPsame") ;
   //PG plot the result of the fits on top
   TF1 * f_ratio = new TF1 ("f_ratio", ratio_crystalBallLowHighWithRise, 0, 2000, 16) ;
   f_ratio->SetParameters (params_difference) ;
   f_ratio->SetNpx (10000) ;
   f_ratio->SetLineWidth (2) ;
-  f_ratio->SetLineColor (kBlue + 2) ;
+  f_ratio->SetLineColor (kBlue + 2) ;
   f_ratio->Draw ("same") ;
+
+
+  //How to correctly rescale the signal to the bsm case??? not sure...
+
+  //  func_mg_2->FixParameter(2,func_mg_2->GetParameter(2)*cprime);
+  //  func_mg_2->FixParameter(0,func_mg_2->GetParameter(0)/cprime);
+  //  func_mg_2->FixParameter(3,func_mg_2->GetParameter(3)*cprime); ??
+  //  func_mg_2->FixParameter(5,func_mg_2->GetParameter(5)*cprime); ??
+
+  Double_t params_difference2[16] ;
+  func_ph_1->GetParameters (params_difference2) ;
+  func_mg_2->GetParameters (params_difference2 + 9) ;
   
-  c5->Print (TString ("corr_factor") + suffix, "pdf") ;
+  f_ratio2 = new TF1 ("f_ratio2", ratio_crystalBallLowHighWithRise, 0, 2000, 16) ;
+  f_ratio2->SetParameters (params_difference2) ;
+  f_ratio2->SetNpx (10000) ;
+  f_ratio2->SetLineWidth (2) ;
+  f_ratio2->SetLineColor (kRed + 2) ;
+  //  f_ratio2->Draw ("same") ;
+
+  
+  c5->Print (TString ("corr_factor") + suffix, "png") ;
+
+
+  //plot S after correction for interference
+
+  /*  
+  TCanvas * c18_mg = new TCanvas ("c18_mg", "c18_mg") ;
+  ymax = h_MWW_mg->GetBinContent (h_MWW_mg->GetMaximumBin ()) ;
+  ymin = h_MWW_mg->GetBinContent (h_MWW_mg->GetMinimumBin ()) ;
+  if (ymin <= 0) ymin = ymax / 10000. ; 
+
+  //  TH1F * c18_mg_frame = (TH1F *) c18_mg->DrawFrame (200, 0.001, rangeScale * mass, 1.) ;
+    TH1F * c18_mg_frame = (TH1F *) c18_mg->DrawFrame (200, 0.9 * ymin, rangeScale * mass, 1.1 * ymax) ;
+  c18_mg->SetLogy () ;
+  c18_mg_frame->SetTitle (0) ;
+  c18_mg_frame->SetStats (0) ;
+  c18_mg_frame->GetXaxis ()->SetTitle ("m_{WW} (GeV)") ;
+  //  h_MWW_mg_error->Draw ("e3same") ;
+  h_MWW_mg->Draw ("EPsame") ;
+  func_mg_2->SetLineColor(kRed);
+
+  TF1 * corr_sign2 = new TF1 ("corr_sign", corr_sign, 0, 2000, 16) ;
+  corr_sign2->SetLineColor(kGreen);
+  // corr_sign2->Draw("same");
+
+  func_mg_2->Draw ("same");
+      
+  c18_mg->Update () ;
+  c18_mg->Print (TString ("corrected_signal_log") + suffix, "png") ;
+
+  c18_mg->SetLogy (0) ;
+  c18_mg->Print (TString ("corrected_signal_lin") + suffix, "png") ;
   */
+  
+  
   //PG plotting S only, and (SBI - B) 
   //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
   /*
@@ -989,7 +1123,7 @@ int macro_findInterferece (string filename, double mass, std::vector<double> & p
   TFile outputfile (outfilename, "recreate") ;
   outputfile.cd () ;
   f_doublePeakModel->Write () ;
-  func_mg_1->Write () ;
+  func_mg_2->Write () ;
   func_ph_1->Write () ;
   outputfile.Close () ;  
 
@@ -998,12 +1132,14 @@ int macro_findInterferece (string filename, double mass, std::vector<double> & p
   return 0 ;
   */
 
+  return(0);
+
 }                                                                                   
 
 
   ////////////////////////////////////////////////////////////
 
-void call_fit (int mass, string massa,  std::vector<vector<double> > &param,   std::vector<vector<double> > &param_error)
+void call_fit (int mass, string massa,  std::vector<vector<double> > &param,   std::vector<vector<double> > &param_error, std::vector<vector<double> > &param_mg, std::vector<vector<double> > &param_error_mg)
 
 {
 
@@ -1014,6 +1150,8 @@ void call_fit (int mass, string massa,  std::vector<vector<double> > &param,   s
 
   std::vector<double> param_temp;
   std::vector<double> param_error_temp;
+  std::vector<double> param_temp_mg;
+  std::vector<double> param_error_temp_mg;
 
   std::string stringa;
 
@@ -1025,16 +1163,21 @@ void call_fit (int mass, string massa,  std::vector<vector<double> > &param,   s
       stringa.append(cprime_string[c]);
       stringa.append(".1.root");
 
-      macro_findInterferece (stringa, mass, param_temp, param_error_temp, 1, cprime[c]); //call fit on a single point (mass,cprime)
+      macro_findInterferece (stringa, mass, param_temp, param_error_temp,  param_temp_mg, param_error_temp_mg, 1, cprime[c]); //call fit on a single point (mass,cprime)
 
-      getchar();
+      //      getchar();
       param.push_back(param_temp);
       param_error.push_back(param_error_temp);
 
-      //      for (int i=0; i<9; i++) {
-      //	std::std::cout<<param.at(c).at(i)<<" "<<param_error.at(c).at(i)<<std::endl;
-      // }
-      
+      param_mg.push_back(param_temp_mg);
+      param_error_mg.push_back(param_error_temp_mg);
+
+      /*            for (int i=0; i<7; i++) {
+	      if (i==2);
+      	std::cout<<param_mg.at(c).at(i)<<" "<<param_error.at(c).at(i)<<std::endl;
+	getchar();
+             }
+      */
       param_temp.clear();
       param_error_temp.clear();
       stringa.clear();
@@ -1056,8 +1199,6 @@ int produce_plot (TString name,  double param350_new[],  double paramerror350_ne
 
   double cprime [6] = {0.1,0.3,0.5,0.7,0.9,1.0};
   double errcprime [6] = {0.,0.,0.,0.,0.,0.};
-
-  std::cout<<"DAIIIIIIIIIIIIII "<<param350_new[2]<<std::endl;
 
    TGraphErrors *gr_D = new TGraphErrors ( Ncprime, cprime, param350_new, errcprime, paramerror350_new);
 
@@ -1137,6 +1278,9 @@ int main(int argc, char *argv[])
   int Ncprime = 6;
   int Npar = 9;
 
+  double cprime [6] = {0.1,0.3,0.5,0.7,0.9,1.0};
+  double errcprime [6] = {0.,0.,0.,0.,0.,0.};
+
   std::vector<vector<double> > param350;
   std::vector<vector<double> > paramerror350;
   std::vector<vector<double> > param650;
@@ -1146,11 +1290,20 @@ int main(int argc, char *argv[])
   std::vector<vector<double> > param1000;
   std::vector<vector<double> > paramerror1000;
 
+  std::vector<vector<double> > param350_mg;
+  std::vector<vector<double> > paramerror350_mg;
+  std::vector<vector<double> > param650_mg;
+  std::vector<vector<double> > paramerror650_mg;
+  std::vector<vector<double> > param800_mg;
+  std::vector<vector<double> > paramerror800_mg;
+  std::vector<vector<double> > param1000_mg;
+  std::vector<vector<double> > paramerror1000_mg;
 
-  call_fit(350, "350", param350, paramerror350);
-  call_fit(650, "650", param650, paramerror650);
-  call_fit(800, "800", param800, paramerror800);
-  call_fit(1000, "1000", param1000, paramerror1000);
+
+  call_fit(350, "350", param350, paramerror350, param350_mg, paramerror350_mg);
+  call_fit(650, "650", param650, paramerror650, param650_mg, paramerror650_mg);
+  call_fit(800, "800", param800, paramerror800, param800_mg, paramerror800_mg);
+  call_fit(1000, "1000", param1000, paramerror1000, param1000_mg, paramerror1000_mg);
 
 
     TString parameters [9] = {"Norm","Mean_CB_over_Higgs_mass","Sigma_CB_over_Higgs_width","alphaR_CB_times_Sigma_CB","nR_CB","alphaL_CB_times_Sigma_CB","nL_CB","R","Tau"};
@@ -1253,9 +1406,6 @@ int main(int argc, char *argv[])
   namefile->Append(".root");
   TFile* outfile = new TFile(namefile->Data(), "RECREATE");
 
-  double cprime [6] = {0.1,0.3,0.5,0.7,0.9,1.0};
-  double errcprime [6] = {0.,0.,0.,0.,0.,0.};
-
   
    TGraphErrors *gr_D = new TGraphErrors ( Ncprime, cprime, param350_sorted, errcprime, paramerror350_sorted);
 
@@ -1317,8 +1467,118 @@ int main(int argc, char *argv[])
 
   outfile->Close();
 
+  }
+
+
+
+  ofstream filebis[9];
+
+  for (int i=0; i<Npar; i++) {
+
+    TString *namefile = new TString (parameters_normal[i]);  
+    namefile->Append("_SI.txt");
+
+    filebis[i].open (namefile->Data());
+
+    for (int c=0; c<Ncprime; c++) {
+      filebis[i]<<350<<" "<<cprime[c]<<" "<<param350.at(c).at(i)<<"\n";
+      filebis[i]<<650<<" "<<cprime[c]<<" "<<param650.at(c).at(i)<<"\n";
+      filebis[i]<<800<<" "<<cprime[c]<<" "<<param800.at(c).at(i)<<"\n";
+      filebis[i]<<1000<<" "<<cprime[c]<<" "<<param1000.at(c).at(i)<<"\n";
+    }
+
+    filebis[i].close();
 
   }
 
-  return(0);
+
+  ofstream filetris[7];
+
+  for (int i=0; i<(Npar-2); i++) {
+
+    TString *namefile = new TString (parameters_normal[i]);  
+    namefile->Append("_S.txt");
+
+    filetris[i].open (namefile->Data()); 
+
+    for (int c=0; c<Ncprime; c++) {
+      if (i==2) {
+      filetris[i]<<350<<" "<<cprime[c]<<" "<<param350_mg.at(c).at(i)*cprime[c]<<"\n";
+      filetris[i]<<650<<" "<<cprime[c]<<" "<<param650_mg.at(c).at(i)*cprime[c]<<"\n";
+      filetris[i]<<800<<" "<<cprime[c]<<" "<<param800_mg.at(c).at(i)*cprime[c]<<"\n";
+      filetris[i]<<1000<<" "<<cprime[c]<<" "<<param1000_mg.at(c).at(i)*cprime[c]<<"\n";
+      }
+      else {
+      filetris[i]<<350<<" "<<cprime[c]<<" "<<param350_mg.at(c).at(i)<<"\n";
+      filetris[i]<<650<<" "<<cprime[c]<<" "<<param650_mg.at(c).at(i)<<"\n";
+      filetris[i]<<800<<" "<<cprime[c]<<" "<<param800_mg.at(c).at(i)<<"\n";
+      filetris[i]<<1000<<" "<<cprime[c]<<" "<<param1000_mg.at(c).at(i)<<"\n";
+      }
+
+    }
+
+    filetris[i].close();
+
+  }
+
+
+
+  ////open parameter files and create TGraph2D
+
+  TString *namefile_SI = new TString ("file_for_interpolation.root");
+  TFile* outfile_SI = new TFile(namefile_SI->Data(), "RECREATE");
+
+  ifstream file_SI[9];
+  TGraph2D *graph_SI[9];
+  double mass,c,value;
+
+  for (int i=0; i<Npar; i++) {
+
+    TString *namefile = new TString (parameters_normal[i]);  
+    namefile->Append("_SI.txt");
+
+    file_SI[i].open (namefile->Data());  
+    graph_SI[i] = new TGraph2D(namefile->Data(),"");
+
+    int count=0;
+    while (!file_SI[i].eof()) {
+      file_SI[i]>>mass>>c>>value;
+      graph_SI[i]->SetPoint(count,mass,c,value);
+      count++;
+    }
+
+    graph_SI[i]->Write(namefile->Data());
+    file_SI[i].close();
+  }
+
+
+  ifstream file_S[7];
+  TGraph2D *graph_S[7];
+
+  for (int i=0; i<Npar-2; i++) {
+
+    TString *namefile = new TString (parameters_normal[i]);  
+    namefile->Append("_S.txt");
+
+    file_S[i].open (namefile->Data()); 
+    graph_S[i] = new TGraph2D(namefile->Data(),"");
+
+    int count=0;
+    while (!file_S[i].eof()) {
+      file_S[i]>>mass>>c>>value;
+      graph_S[i]->SetPoint(count,mass,c,value);
+      count++;
+    }
+
+    graph_S[i]->Write(namefile->Data());
+    file_S[i].close();
+  }
+
+  outfile_SI->Close();
+
+
+
+return(0);
+
 }
+
