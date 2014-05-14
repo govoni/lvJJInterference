@@ -15,6 +15,7 @@
 #include "TTree.h"
 #include "TFile.h"
 #include "TH1F.h"
+#include "TH2D.h"
 #include "THStack.h"
 #include "TString.h"
 #include "TLegend.h"
@@ -55,6 +56,67 @@ double min (double uno, double due)
   if (uno < due) return uno ;
   return due ;
 }
+
+double Mean (double mass, double cprime)
+{
+  if (mass==349||mass==350)         return mass*(0.999716+2.00238e-05*cprime);
+  else if (mass==650)    return mass*(0.996825-0.0104439*cprime);
+  else if (mass==800)    return mass*(0.994242-0.0305097*cprime);
+  else if (mass==1000||mass==1001)    return mass*(0.983497-0.126495*cprime);  
+}
+
+double Sigma (double mass, double cprime)
+{
+  if (mass==349||mass==350)         return 15.2*(0.0190926+0.384806*cprime);
+  else if (mass==650)    return 158*(0.0389309+0.329887*cprime);
+  else if (mass==800)    return 304*(0.0232355+0.310422*cprime);
+  else if (mass==1000||mass==1001)    return 647*(0.052344+0.273591*cprime);  
+}
+
+double alphaR (double mass, double cprime)
+{
+  if (mass==349||mass==350)         return (0.710543+5.00614*cprime)/Sigma(mass,cprime);
+  else if (mass==650)    return 12.685566682*(0.710543+5.00614*cprime)/Sigma(mass,cprime);
+  else if (mass==800)    return 24.048163133*(0.710543+5.00614*cprime)/Sigma(mass,cprime);
+  else if (mass==1000||mass==1001)    return 55.400735572*(0.710543+5.00614*cprime)/Sigma(mass,cprime);  
+}
+
+double nR (double mass, double cprime)
+{
+  if (mass==349||mass==350)         return 3.32443*(1-exp(-100.*cprime))+0.2565*cprime;
+  else if (mass==650)    return 1.140059648*(3.32443*(1-exp(-3.*cprime))+0.2565*cprime);
+  else if (mass==800)    return 1.210214476*(3.32443*(1-exp(-2.*cprime))+0.2565*cprime);
+  else if (mass==1000||mass==1001)    return 1.303137708*(3.32443*(1-exp(-2.*cprime))+0.2565*cprime);  
+}
+
+double alphaL (double mass, double cprime)
+{
+  if (mass==349||mass==350)         return ( 0.670827+4.60148*cprime)/Sigma(mass,cprime);
+  else if (mass==650)    return 7.98268379*( 0.670827+4.60148*cprime)/Sigma(mass,cprime);
+  else if (mass==800)    return 8.106704398*( 0.670827+4.60148*cprime)/Sigma(mass,cprime);
+  else if (mass==1000||mass==1001)    return 22.917553807*( 0.670827+4.60148*cprime)/Sigma(mass,cprime);  
+}
+
+double nL (double mass, double cprime)
+{
+  if (mass==349||mass==350)         return 1.24122+2.22144*cprime;
+  else    return ((350/(1.*mass))*1.24122+(1+(350/(1.*mass)))*2.22144*cprime);
+}
+
+double Tau (double mass, double cprime)
+{
+  return 86.0005+25.3303*cprime;
+}
+
+double R (double mass, double cprime)
+{
+  if (mass==349||mass==350)         return 0.00109501+ 0.0185918*cprime;
+  else if (mass==650)    return 1.1*(0.0587824+ 0.0412092*cprime);
+  else if (mass==800)    return 0.01*(0.0587824+ 0.0412092*cprime);
+  else if (mass==1000||mass==1001)    return 0.0001*(0.0587824+ 0.0412092*cprime);  
+}
+
+
 
 
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -153,7 +215,6 @@ Double_t relativeCrystalBallLowHighRatio (Double_t * xx, Double_t * par) // [(SB
 
 
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
-
 
 Double_t withLeftAddOn (Double_t * xx, Double_t * par)
 {
@@ -352,6 +413,7 @@ double ratio_crystalBallLowHighWithRise (double* x, double* par)
   if (den == 0) return -1. ;
   double num = doubleGausCrystalBallLowHighPlusExp (x, par) ;    // signal and interference
   return num / den ;
+  // return num;
 }
 
 
@@ -599,71 +661,24 @@ TF1 * FIT_phantom_signal (TH1F * diff, double mass, double rangeScale, TString s
 		 //  func_ph_1->FixParameter (8, 86.0005+25.3303*cprime);
 		 */
 
-  if (mass==350) {
+  func_ph_1->FixParameter(1,Mean(mass,cprime));
+  func_ph_1->FixParameter(2,Sigma(mass,cprime));
+  func_ph_1->FixParameter(3,alphaR(mass,cprime));
+  func_ph_1->FixParameter(4,nR(mass,cprime));
+  func_ph_1->FixParameter(5,alphaL(mass,cprime));
+  func_ph_1->FixParameter(6,nL(mass,cprime));
+  func_ph_1->FixParameter(7,R(mass,cprime));
+  func_ph_1->FixParameter(8,Tau(mass,cprime));
 
-    func_ph_1->SetParameter(0,0.000433428+8.80617e-05*cprime);
-    func_ph_1->FixParameter(1,mass*(0.999716+2.00238e-05*cprime));
-    func_ph_1->FixParameter (2, 15.2*(0.0190926+0.384806*cprime)) ;
-    func_ph_1->FixParameter (3, (0.710543+5.00614*cprime)/func_ph_1->GetParameter(2)) ;
-    func_ph_1->FixParameter (4, 3.32443*(1-exp(-100.*cprime))+0.2565*cprime);
-     func_ph_1->FixParameter (5,( 0.670827+4.60148*cprime)/func_ph_1->GetParameter(2));
-      func_ph_1->FixParameter (6, 1.24122+2.22144*cprime);
-    func_ph_1->FixParameter (7, 0.00109501+ 0.0185918*cprime);
-    //    func_ph_1->SetParLimits (7, 0,1);
-    func_ph_1->FixParameter (8, 86.0005+25.3303*cprime);
-
-  }
-
+  if (mass==350)     func_ph_1->SetParameter(0,0.000433428+8.80617e-05*cprime);
   else if (mass==650) {
-
-          func_ph_1->SetParameter (0, 0.01*0.000433428+8.80617e-05*cprime) ;  // multiplicative scale                                                
+      func_ph_1->SetParameter (0, 0.01*0.000433428+8.80617e-05*cprime) ;  // multiplicative scale                                                
       func_ph_1->SetParLimits (0, 0, 0.00006);
-      func_ph_1->FixParameter (7, 1.1*(0.0587824+ 0.0412092*cprime));
-      // func_ph_1->SetParLimits (7, 0,1);
-           func_ph_1->FixParameter(1,mass*(0.996825-0.0104439*cprime));
-         func_ph_1->FixParameter (2, 158*(0.0389309+0.329887*cprime)) ;
-	 func_ph_1->FixParameter (3, 10.184622795*1.245560777*(0.710543+5.00614*cprime)/func_ph_1->GetParameter(2)) ;
-	 func_ph_1->FixParameter (4,1.140059648*(3.32443*(1-exp(-3.*cprime))+0.2565*cprime));
-      func_ph_1->FixParameter (5, 10.184622795*0.783797687*( 0.670827+4.60148*cprime)/func_ph_1->GetParameter(2));
-      func_ph_1->FixParameter (6, ((350/(1.*mass))*1.24122+(1+(350/(1.*mass)))*2.22144*cprime));
-    func_ph_1->FixParameter (8, 86.0005+25.3303*cprime);
-
-    //      func_ph_1->FixParameter (8, 0.922339796*(86.0005+25.3303*cprime));
-
   }
-
-  else if (mass==800) {
-
-    func_ph_1->SetParameter (0, 0.005250714*(0.000433428+8.80617e-05*cprime)) ;  // multiplicative scale                                                
-       func_ph_1->FixParameter (7, 0.01*(0.0587824+ 0.0412092*cprime));
-       // func_ph_1->SetParLimits (7, 0,1);
-           func_ph_1->FixParameter(1,mass*(0.994242-0.0305097*cprime));
-	   func_ph_1->FixParameter (2, 304*(0.0232355+0.310422*cprime)) ;
-	 func_ph_1->FixParameter (3, 17.975800457*1.337807637*(0.710543+5.00614*cprime)/func_ph_1->GetParameter(2)) ;
-	   func_ph_1->FixParameter (4,1.210214476*(3.32443*(1-exp(-2.*cprime))+0.2565*cprime));
-      func_ph_1->FixParameter (5, 17.975800457*0.450978771*( 0.670827+4.60148*cprime)/func_ph_1->GetParameter(2));
-      func_ph_1->FixParameter (6, ((350/(1.*mass))*1.24122+(1+(350/(1.*mass)))*2.22144*cprime));
-          func_ph_1->FixParameter (8, 86.0005+25.3303*cprime);
-
-	  // func_ph_1->FixParameter (8, 1.691172375*(86.0005+25.3303*cprime));
-  }
-
-  if (mass==1000) {
-
-          func_ph_1->SetParameter (0, 0.01*0.000433428+8.80617e-05*cprime) ;  // multiplicative scale                                                
+  else if (mass==800)     func_ph_1->SetParameter (0, 0.005250714*(0.000433428+8.80617e-05*cprime)) ;  // multiplicative scale         
+  else if (mass==1000) {
+      func_ph_1->SetParameter (0, 0.01*0.000433428+8.80617e-05*cprime) ;  // multiplicative scale                                                
       func_ph_1->SetParLimits (0, 0, 0.00006);
-             func_ph_1->FixParameter (7, 0.0001*(0.0587824+ 0.0412092*cprime));
-	     // func_ph_1->SetParLimits (7, 0,1);
-           func_ph_1->FixParameter(1,mass*(0.983497-0.126495*cprime));
-         func_ph_1->FixParameter (2, 647*(0.052344+0.273591*cprime)) ;
-	 func_ph_1->FixParameter (3, 38.237893051*1.448843834*(0.710543+5.00614*cprime)/func_ph_1->GetParameter(2)) ;
-	 func_ph_1->FixParameter (4,1.303137708*(3.32443*(1-exp(-2.*cprime))+0.2565*cprime));
-	   func_ph_1->FixParameter (5, 38.237893051*0.599341438*( 0.670827+4.60148*cprime)/func_ph_1->GetParameter(2));
-      func_ph_1->FixParameter (6, ((350/(1.*mass))*1.24122+(1+(350/(1.*mass)))*2.22144*cprime));
-    func_ph_1->FixParameter (8, 86.0005+25.3303*cprime);
-
-    //      func_ph_1->FixParameter (8, 1.625873857*(86.0005+25.3303*cprime));
-
 }
  
     
@@ -1010,9 +1025,10 @@ int macro_findInterferece (string filename, double mass, std::vector<double> & p
 
   c5->SetLogy () ;
 
+  //  TH1F * c5_frame = (TH1F *) c5->DrawFrame (200, 0.1, rangeScale*mass, 10) ;
   TH1F * c5_frame = (TH1F *) c5->DrawFrame (200, 0.001, rangeScale*mass, ymax) ;
   c5_frame->SetTitle (0) ;
-  c5_frame->SetStats (0) ;
+  c5_frame->SetStats (1) ;
   c5_frame->GetXaxis ()->SetTitle ("m_{WW} (GeV)") ;
 
   //  func_mg_2->FixParameter(2,func_mg_2->GetParameter(2)*cprime);
@@ -1049,8 +1065,25 @@ int macro_findInterferece (string filename, double mass, std::vector<double> & p
   f_ratio2->SetLineColor (kRed + 2) ;
   //  f_ratio2->Draw ("same") ;
 
+  c5->Update () ;
+  c5->Print (TString ("corr_factor_log") + suffix, "png") ;
+
+
+  TCanvas * c6 = new TCanvas ("c6", "c6") ;
+
+  TH1F * c6_frame = (TH1F *) c6->DrawFrame (200, 0, rangeScale*mass, 10) ;
+  c6_frame->SetTitle (0) ;
+  c6_frame->SetStats (1011) ;
+  c6_frame->GetXaxis ()->SetTitle ("m_{WW} (GeV)") ;
+  ratio->Draw ("EPsame") ;
+  f_ratio->Draw ("same") ;
+
+  c6->Print (TString ("corr_factor_lin") + suffix, "png") ;
+
+
+
   
-  c5->Print (TString ("corr_factor") + suffix, "png") ;
+  //  c5->Print (TString ("corr_factor") + suffix, "png") ;
 
 
   //plot S after correction for interference
@@ -1277,9 +1310,13 @@ int main(int argc, char *argv[])
 
   int Ncprime = 6;
   int Npar = 9;
+  int Ncprime_alt = 15;
 
   double cprime [6] = {0.1,0.3,0.5,0.7,0.9,1.0};
   double errcprime [6] = {0.,0.,0.,0.,0.,0.};
+    double cprime_alt [2] = {0.01,1.05};
+  //   double cprime_alt [15] = {0.05,0.15,0.2,0.25,0.35,0.4,0.45,0.55,0.6,0.65,0.75,0.8,0.85,0.95,1.05};
+
 
   std::vector<vector<double> > param350;
   std::vector<vector<double> > paramerror350;
@@ -1306,7 +1343,7 @@ int main(int argc, char *argv[])
   call_fit(1000, "1000", param1000, paramerror1000, param1000_mg, paramerror1000_mg);
 
 
-    TString parameters [9] = {"Norm","Mean_CB_over_Higgs_mass","Sigma_CB_over_Higgs_width","alphaR_CB_times_Sigma_CB","nR_CB","alphaL_CB_times_Sigma_CB","nL_CB","R","Tau"};
+  TString parameters [9] = {"Norm","Mean_CB_over_Higgs_mass","Sigma_CB_over_Higgs_width","alphaR_CB_times_Sigma_CB","nR_CB","alphaL_CB_times_Sigma_CB","nL_CB","R","Tau"};
     // TString parameters [9] = {"Norm","Mean_CB_over_Higgs_mass","Sigma_CB_over_Higgs_width","alphaR_CB_times_Sigma_CB","nR_CB","alphaL_CB_times_Sigma_CB","nL_CB","R","Tau"};
   TString parameters_normal [9] = {"Norm","Mean_CB","Sigma_CB","alphaR_CB","nR_CB","alphaL_CB","nL_CB","R","Tau"};
   double min[9] = {-16,0.8,0,0,0,0,0,0,0};
@@ -1337,7 +1374,7 @@ int main(int argc, char *argv[])
   for (int i=0; i<Npar; i++) {
     for (int c=0; c<Ncprime; c++) {
 
-      /*      if (i==0) {          //if Norm, plot LogNorm
+                  if (i==0) {          //if Norm, plot LogNorm
 	param350_sorted[c]=TMath::Log(param350.at(c).at(i));
 	paramerror350_sorted[c]=TMath::Log(paramerror350.at(c).at(i));
 	param650_sorted[c]=TMath::Log(param650.at(c).at(i));
@@ -1347,8 +1384,8 @@ int main(int argc, char *argv[])
 	param1000_sorted[c]=TMath::Log(param1000.at(c).at(i));
 	paramerror1000_sorted[c]=TMath::Log(paramerror1000.at(c).at(i));
       }
-      */
-            if (i==0) {          //if Norm, plot LogNorm
+      
+		  /*	                if (i==0) {          //if Norm, plot LogNorm
 	param350_sorted[c]=(param350.at(c).at(i));
 	paramerror350_sorted[c]=(paramerror350.at(c).at(i));
 	param650_sorted[c]=(param650.at(c).at(i));
@@ -1358,7 +1395,7 @@ int main(int argc, char *argv[])
 	param1000_sorted[c]=(param1000.at(c).at(i));
 	paramerror1000_sorted[c]=(paramerror1000.at(c).at(i));
       }
-
+		  */
       else if (i==1) {          //if MeanCB, plot mean_CB/Higgs_mass
 	param350_sorted[c]=param350.at(c).at(i)/350.;
 	paramerror350_sorted[c]=paramerror350.at(c).at(i)/350.;
@@ -1469,8 +1506,6 @@ int main(int argc, char *argv[])
 
   }
 
-
-
   ofstream filebis[9];
 
   for (int i=0; i<Npar; i++) {
@@ -1480,13 +1515,83 @@ int main(int argc, char *argv[])
 
     filebis[i].open (namefile->Data());
 
+    for (int c=0; c<Ncprime_alt; c++) {
+      if (parameters_normal[i].Contains("Mean_CB")) {
+	  filebis[i]<<349<<" "<<cprime_alt[c]<<" "<<Mean(349,cprime_alt[c])<<endl;
+	  filebis[i]<<650<<" "<<cprime_alt[c]<<" "<<Mean(650,cprime_alt[c])<<endl;
+	  filebis[i]<<800<<" "<<cprime_alt[c]<<" "<<Mean(800,cprime_alt[c])<<endl;
+	  filebis[i]<<1001<<" "<<cprime_alt[c]<<" "<<Mean(1001,cprime_alt[c])<<endl;
+	}
+      else if (parameters_normal[i].Contains("Sigma_CB")) {
+	  filebis[i]<<349<<" "<<cprime_alt[c]<<" "<<Sigma(349,cprime_alt[c])<<endl;
+	  filebis[i]<<650<<" "<<cprime_alt[c]<<" "<<Sigma(650,cprime_alt[c])<<endl;
+	  filebis[i]<<800<<" "<<cprime_alt[c]<<" "<<Sigma(800,cprime_alt[c])<<endl;
+	  filebis[i]<<1001<<" "<<cprime_alt[c]<<" "<<Sigma(1001,cprime_alt[c])<<endl;
+	}
+      else if (parameters_normal[i].Contains("alphaR_CB")) {
+	  filebis[i]<<349<<" "<<cprime_alt[c]<<" "<<alphaR(349,cprime_alt[c])<<endl;
+	  filebis[i]<<650<<" "<<cprime_alt[c]<<" "<<alphaR(650,cprime_alt[c])<<endl;
+	  filebis[i]<<800<<" "<<cprime_alt[c]<<" "<<alphaR(800,cprime_alt[c])<<endl;
+	  filebis[i]<<1001<<" "<<cprime_alt[c]<<" "<<alphaR(1001,cprime_alt[c])<<endl;
+	}
+      else if (parameters_normal[i].Contains("alphaL_CB")) {
+	  filebis[i]<<349<<" "<<cprime_alt[c]<<" "<<alphaL(349,cprime_alt[c])<<endl;
+	  filebis[i]<<650<<" "<<cprime_alt[c]<<" "<<alphaL(650,cprime_alt[c])<<endl;
+	  filebis[i]<<800<<" "<<cprime_alt[c]<<" "<<alphaL(800,cprime_alt[c])<<endl;
+	  filebis[i]<<1001<<" "<<cprime_alt[c]<<" "<<alphaL(1001,cprime_alt[c])<<endl;
+	}
+      else if (parameters_normal[i].Contains("nL_CB")) {
+	  filebis[i]<<349<<" "<<cprime_alt[c]<<" "<<nL(349,cprime_alt[c])<<endl;
+	  filebis[i]<<650<<" "<<cprime_alt[c]<<" "<<nL(650,cprime_alt[c])<<endl;
+	  filebis[i]<<800<<" "<<cprime_alt[c]<<" "<<nL(800,cprime_alt[c])<<endl;
+	  filebis[i]<<1001<<" "<<cprime_alt[c]<<" "<<nL(1001,cprime_alt[c])<<endl;
+	}
+      else if (parameters_normal[i].Contains("nR_CB")) {
+	  filebis[i]<<349<<" "<<cprime_alt[c]<<" "<<nR(349,cprime_alt[c])<<endl;
+	  filebis[i]<<650<<" "<<cprime_alt[c]<<" "<<nR(650,cprime_alt[c])<<endl;
+	  filebis[i]<<800<<" "<<cprime_alt[c]<<" "<<nR(800,cprime_alt[c])<<endl;
+	  filebis[i]<<1001<<" "<<cprime_alt[c]<<" "<<nR(1001,cprime_alt[c])<<endl;
+	}
+      else if (parameters_normal[i].Contains("R")) {
+	  filebis[i]<<349<<" "<<cprime_alt[c]<<" "<<R(349,cprime_alt[c])<<endl;
+	  filebis[i]<<650<<" "<<cprime_alt[c]<<" "<<R(650,cprime_alt[c])<<endl;
+	  filebis[i]<<800<<" "<<cprime_alt[c]<<" "<<R(800,cprime_alt[c])<<endl;
+	  filebis[i]<<1001<<" "<<cprime_alt[c]<<" "<<R(1001,cprime_alt[c])<<endl;
+	}
+      else if (parameters_normal[i].Contains("Tau")) {
+	  filebis[i]<<349<<" "<<cprime_alt[c]<<" "<<Tau(349,cprime_alt[c])<<endl;
+	  filebis[i]<<650<<" "<<cprime_alt[c]<<" "<<Tau(650,cprime_alt[c])<<endl;
+	  filebis[i]<<800<<" "<<cprime_alt[c]<<" "<<Tau(800,cprime_alt[c])<<endl;
+	  filebis[i]<<1001<<" "<<cprime_alt[c]<<" "<<Tau(1001,cprime_alt[c])<<endl;
+	}
+      else {
+        int c2=0;
+	if (c==0)  c2=0;
+	else if (c==1)  c2=5;
+	filebis[i]<<349<<" "<<cprime_alt[c]<<" "<<TMath::Log(param350.at(c2).at(i))<<endl;
+	filebis[i]<<650<<" "<<cprime_alt[c]<<" "<<TMath::Log(param650.at(c2).at(i))<<endl;
+	filebis[i]<<800<<" "<<cprime_alt[c]<<" "<<TMath::Log(param800.at(c2).at(i))<<endl;
+	filebis[i]<<1001<<" "<<cprime_alt[c]<<" "<<TMath::Log(param1000.at(c2).at(i))<<endl;
+      }
+         }
+    
     for (int c=0; c<Ncprime; c++) {
-      filebis[i]<<350<<" "<<cprime[c]<<" "<<param350.at(c).at(i)<<"\n";
-      filebis[i]<<650<<" "<<cprime[c]<<" "<<param650.at(c).at(i)<<"\n";
-      filebis[i]<<800<<" "<<cprime[c]<<" "<<param800.at(c).at(i)<<"\n";
-      filebis[i]<<1000<<" "<<cprime[c]<<" "<<param1000.at(c).at(i)<<"\n";
-    }
+            if (parameters_normal[i].Contains("Norm")) {
+	  filebis[i]<<350<<" "<<cprime[c]<<" "<<TMath::Log(param350.at(c).at(i))<<endl;
+	  filebis[i]<<650<<" "<<cprime[c]<<" "<<TMath::Log(param650.at(c).at(i))<<endl;
+	  filebis[i]<<800<<" "<<cprime[c]<<" "<<TMath::Log(param800.at(c).at(i))<<endl;
+	  filebis[i]<<1000<<" "<<cprime[c]<<" "<<TMath::Log(param1000.at(c).at(i))<<endl;
+	}
+      else {
+      	filebis[i]<<350<<" "<<cprime[c]<<" "<<param350.at(c).at(i)<<endl;
+	filebis[i]<<650<<" "<<cprime[c]<<" "<<param650.at(c).at(i)<<endl;
+	filebis[i]<<800<<" "<<cprime[c]<<" "<<param800.at(c).at(i)<<endl;
+	filebis[i]<<1000<<" "<<cprime[c]<<" "<<param1000.at(c).at(i)<<endl;
+		}
 
+      }
+
+    filebis[i]<<-1;
     filebis[i].close();
 
   }
@@ -1502,21 +1607,39 @@ int main(int argc, char *argv[])
     filetris[i].open (namefile->Data()); 
 
     for (int c=0; c<Ncprime; c++) {
-      if (i==2) {
-      filetris[i]<<350<<" "<<cprime[c]<<" "<<param350_mg.at(c).at(i)*cprime[c]<<"\n";
-      filetris[i]<<650<<" "<<cprime[c]<<" "<<param650_mg.at(c).at(i)*cprime[c]<<"\n";
-      filetris[i]<<800<<" "<<cprime[c]<<" "<<param800_mg.at(c).at(i)*cprime[c]<<"\n";
-      filetris[i]<<1000<<" "<<cprime[c]<<" "<<param1000_mg.at(c).at(i)*cprime[c]<<"\n";
-      }
+        if (parameters_normal[i].Contains("Norm")) {
+	  filetris[i]<<350<<" "<<cprime[c]<<" "<<TMath::Log(param350_mg.at(c).at(i))<<endl;
+	  filetris[i]<<650<<" "<<cprime[c]<<" "<<TMath::Log(param650_mg.at(c).at(i))<<endl;
+	  filetris[i]<<800<<" "<<cprime[c]<<" "<<TMath::Log(param800_mg.at(c).at(i))<<endl;
+	  filetris[i]<<1000<<" "<<cprime[c]<<" "<<TMath::Log(param1000_mg.at(c).at(i))<<endl;
+	}
       else {
-      filetris[i]<<350<<" "<<cprime[c]<<" "<<param350_mg.at(c).at(i)<<"\n";
-      filetris[i]<<650<<" "<<cprime[c]<<" "<<param650_mg.at(c).at(i)<<"\n";
-      filetris[i]<<800<<" "<<cprime[c]<<" "<<param800_mg.at(c).at(i)<<"\n";
-      filetris[i]<<1000<<" "<<cprime[c]<<" "<<param1000_mg.at(c).at(i)<<"\n";
-      }
-
+        filetris[i]<<350<<" "<<cprime[c]<<" "<<param350_mg.at(c).at(i)<<endl;
+      filetris[i]<<650<<" "<<cprime[c]<<" "<<param650_mg.at(c).at(i)<<endl;
+      filetris[i]<<800<<" "<<cprime[c]<<" "<<param800_mg.at(c).at(i)<<endl;
+      filetris[i]<<1000<<" "<<cprime[c]<<" "<<param1000_mg.at(c).at(i)<<endl;
+      	}
     }
 
+    int c2=0;
+    for (int c=0; c<Ncprime_alt; c++) {
+        if (c==0)  c2=0;
+      else if (c==1)  c2=5;
+      if (parameters_normal[i].Contains("Norm")) {
+	  filetris[i]<<349<<" "<<cprime_alt[c]<<" "<<TMath::Log(param350_mg.at(c2).at(i))<<endl;
+	  filetris[i]<<650<<" "<<cprime_alt[c]<<" "<<TMath::Log(param650_mg.at(c2).at(i))<<endl;
+	  filetris[i]<<800<<" "<<cprime_alt[c]<<" "<<TMath::Log(param800_mg.at(c2).at(i))<<endl;
+	  filetris[i]<<1001<<" "<<cprime_alt[c]<<" "<<TMath::Log(param1000_mg.at(c2).at(i))<<endl;
+	}
+      else {
+         filetris[i]<<349<<" "<<cprime_alt[c]<<" "<<param350_mg.at(c2).at(i)<<endl;
+      filetris[i]<<650<<" "<<cprime_alt[c]<<" "<<param650_mg.at(c2).at(i)<<endl;
+      filetris[i]<<800<<" "<<cprime_alt[c]<<" "<<param800_mg.at(c2).at(i)<<endl;
+      filetris[i]<<1001<<" "<<cprime_alt[c]<<" "<<param1000_mg.at(c2).at(i)<<endl;
+      	}
+    }
+
+    filetris[i]<<-1;
     filetris[i].close();
 
   }
@@ -1530,53 +1653,206 @@ int main(int argc, char *argv[])
 
   ifstream file_SI[9];
   TGraph2D *graph_SI[9];
+  TH2D* histo_SI[9];
   double mass,c,value;
-
+  /*
+  Double_t fill_param1[16];
+  Double_t fill_param2[16];
+  Double_t fill_param3[16];
+  Double_t fill_param4[16];
+  Double_t fill_param5[16];
+  Double_t fill_param6[16];
+  Double_t fill_param7[16];
+  Double_t fill_param8[16];
+  Double_t fill_param9[16];
+  Double_t fill_param10[16];
+  Double_t fill_param11[16];
+  Double_t fill_param12[16];
+  Double_t fill_param13[16];
+  Double_t fill_param14[16];
+  Double_t fill_param15[16];
+  Double_t fill_param16[16];
+  Double_t fill_param17[16];
+  Double_t fill_param18[16];
+  Double_t fill_param19[16];
+  Double_t fill_param20[16];
+  Double_t fill_param21[16];
+  Double_t fill_param22[16];
+  Double_t fill_param23[16];
+  Double_t fill_param24[16];
+  */
   for (int i=0; i<Npar; i++) {
 
     TString *namefile = new TString (parameters_normal[i]);  
     namefile->Append("_SI.txt");
 
-    file_SI[i].open (namefile->Data());  
-    graph_SI[i] = new TGraph2D(namefile->Data(),"");
+    TString *namefile2 = new TString (parameters_normal[i]);  
+    namefile2->Append("_SI_histo");
 
+    cout<<namefile->Data()<<endl;
+    file_SI[i].open (namefile->Data());  
+    graph_SI[i] = new TGraph2D(namefile->Data(),namefile->Data());
+    //    graph_SI[i]->SetNpx(4);
+    //  graph_SI[i]->SetNpy(21);
+    histo_SI[i] = new TH2D(namefile2->Data(),namefile2->Data(),4,340,1010,21,0,1.1);
+    //    graph_SI[i]->SetHistogram(histo_SI[i]);
+    
     int count=0;
     while (!file_SI[i].eof()) {
       file_SI[i]>>mass>>c>>value;
+      if (mass==-1) continue;
       graph_SI[i]->SetPoint(count,mass,c,value);
+      /* if (parameters_normal[i].Contains("Norm")){       value=exp(value); }
+           if (mass==350 && c==0.1) {  fill_param1[i]=value;  cout<<value<<endl; }
+      if (mass==350 && c==0.3) {  fill_param2[i]=value;  cout<<value<<endl; }
+      if (mass==350 && c==0.5) {  fill_param3[i]=value;  cout<<value<<endl; }
+      if (mass==350 && c==0.7) {  fill_param4[i]=value;  cout<<value<<endl; }
+      if (mass==350 && c==0.9) {  fill_param5[i]=value;  cout<<value<<endl; }
+      if (mass==350 && c==1.0) {  fill_param6[i]=value;  cout<<value<<endl; }
+      if (mass==650 && c==0.1) {  fill_param7[i]=value;  cout<<value<<endl; }
+      if (mass==650 && c==0.3) {  fill_param8[i]=value;  cout<<value<<endl; }
+      if (mass==650 && c==0.5) {  fill_param9[i]=value;  cout<<value<<endl; }
+      if (mass==650 && c==0.7) {  fill_param10[i]=value;  cout<<value<<endl; }
+      if (mass==650 && c==0.9) {  fill_param11[i]=value;  cout<<value<<endl; }
+      if (mass==650 && c==1.0) {  fill_param12[i]=value;  cout<<value<<endl; }
+      if (mass==800 && c==0.1) {  fill_param13[i]=value;  cout<<value<<endl; }
+      if (mass==800 && c==0.3) {  fill_param14[i]=value;  cout<<value<<endl; }
+      if (mass==800 && c==0.5) {  fill_param15[i]=value;  cout<<value<<endl; }
+      if (mass==800 && c==0.7) {  fill_param16[i]=value;  cout<<value<<endl; }
+      if (mass==800 && c==0.9) {  fill_param17[i]=value;  cout<<value<<endl; }
+      if (mass==800 && c==1.0) {  fill_param18[i]=value;  cout<<value<<endl; }
+      if (mass==1000 && c==0.1) {  fill_param19[i]=value;  cout<<value<<endl; }
+      if (mass==1000 && c==0.3) {  fill_param20[i]=value;  cout<<value<<endl; }
+      if (mass==1000 && c==0.5) {  fill_param21[i]=value;  cout<<value<<endl; }
+      if (mass==1000 && c==0.7) {  fill_param22[i]=value;  cout<<value<<endl; }
+      if (mass==1000 && c==0.9) {  fill_param23[i]=value;  cout<<value<<endl; }
+      if (mass==1000 && c==1.0) {  fill_param24[i]=value;  cout<<value<<endl; }
+      */
       count++;
     }
 
     graph_SI[i]->Write(namefile->Data());
+    //    histo_SI[i]->Write(namefile2->Data());
     file_SI[i].close();
   }
 
 
   ifstream file_S[7];
   TGraph2D *graph_S[7];
+  TH2D *histo_S[9];
 
   for (int i=0; i<Npar-2; i++) {
 
     TString *namefile = new TString (parameters_normal[i]);  
     namefile->Append("_S.txt");
 
+    TString *namefile2 = new TString (parameters_normal[i]);  
+    namefile2->Append("_S_histo");
+
     file_S[i].open (namefile->Data()); 
-    graph_S[i] = new TGraph2D(namefile->Data(),"");
+    graph_S[i] = new TGraph2D(namefile->Data(),namefile->Data());
+    //    graph_S[i]->SetNpx(4);
+    //  graph_S[i]->SetNpy(21);
+    histo_S[i] = new TH2D(namefile2->Data(),namefile2->Data(),4,340,1010,21,0,1.1);
+    //    graph_S[i]->SetHistogram(histo_S[i]);
 
     int count=0;
     while (!file_S[i].eof()) {
       file_S[i]>>mass>>c>>value;
+      if (mass==-1) continue;
       graph_S[i]->SetPoint(count,mass,c,value);
+      /*       if (parameters_normal[i].Contains("Norm"))   value=exp(value);
+      if (mass==350 && c==0.1) {  fill_param1[i+9]=value;  cout<<value<<endl; }
+      if (mass==350 && c==0.3) {  fill_param2[i+9]=value;  cout<<value<<endl; }
+      if (mass==350 && c==0.5) {  fill_param3[i+9]=value;  cout<<value<<endl; }
+      if (mass==350 && c==0.7) {  fill_param4[i+9]=value;  cout<<value<<endl; }
+      if (mass==350 && c==0.9) {  fill_param5[i+9]=value;  cout<<value<<endl; }
+      if (mass==350 && c==1.0) {  fill_param6[i+9]=value;  cout<<value<<endl; }
+      if (mass==650 && c==0.1) {  fill_param7[i+9]=value;  cout<<value<<endl; }
+      if (mass==650 && c==0.3) {  fill_param8[i+9]=value;  cout<<value<<endl; }
+      if (mass==650 && c==0.5) {  fill_param9[i+9]=value;  cout<<value<<endl; }
+      if (mass==650 && c==0.7) {  fill_param10[i+9]=value;  cout<<value<<endl; }
+      if (mass==650 && c==0.9) {  fill_param11[i+9]=value;  cout<<value<<endl; }
+      if (mass==650 && c==1.0) {  fill_param12[i+9]=value;  cout<<value<<endl; }
+      if (mass==800 && c==0.1) {  fill_param13[i+9]=value;  cout<<value<<endl; }
+      if (mass==800 && c==0.3) {  fill_param14[i+9]=value;  cout<<value<<endl; }
+      if (mass==800 && c==0.5) {  fill_param15[i+9]=value;  cout<<value<<endl; }
+      if (mass==800 && c==0.7) {  fill_param16[i+9]=value;  cout<<value<<endl; }
+      if (mass==800 && c==0.9) {  fill_param17[i+9]=value;  cout<<value<<endl; }
+      if (mass==800 && c==1.0) {  fill_param18[i+9]=value;  cout<<value<<endl; }
+      if (mass==1000 && c==0.1) {  fill_param19[i+9]=value;  cout<<value<<endl; }
+      if (mass==1000 && c==0.3) {  fill_param20[i+9]=value;  cout<<value<<endl; }
+      if (mass==1000 && c==0.5) {  fill_param21[i+9]=value;  cout<<value<<endl; }
+      if (mass==1000 && c==0.7) {  fill_param22[i+9]=value;  cout<<value<<endl; }
+      if (mass==1000 && c==0.9) {  fill_param23[i+9]=value;  cout<<value<<endl; }
+      if (mass==1000 && c==1.0) {  fill_param24[i+9]=value;  cout<<value<<endl; }
+      */
       count++;
     }
 
     graph_S[i]->Write(namefile->Data());
+    //    histo_S[i]->Write(namefile2->Data());
     file_S[i].close();
   }
 
-  outfile_SI->Close();
+    outfile_SI->Close();
 
+  // for cross-check
+    /*  TF1* f_ratio23 = new TF1 ("f_ratio23", ratio_crystalBallLowHighWithRise, 0, 2000, 16) ;
 
+  f_ratio23->SetParameters (fill_param1) ;
+  std::cout<<f_ratio23->Eval(350)<<std::endl;
+  f_ratio23->SetParameters (fill_param2) ;
+  std::cout<<f_ratio23->Eval(350)<<std::endl;
+  f_ratio23->SetParameters (fill_param3) ;
+  std::cout<<f_ratio23->Eval(350)<<std::endl;
+  f_ratio23->SetParameters (fill_param4) ;
+  std::cout<<f_ratio23->Eval(350)<<std::endl;
+  f_ratio23->SetParameters (fill_param5) ;
+  std::cout<<f_ratio23->Eval(350)<<std::endl;
+  f_ratio23->SetParameters (fill_param6) ;
+  std::cout<<f_ratio23->Eval(350)<<std::endl;
+
+  f_ratio23->SetParameters (fill_param7) ;
+  std::cout<<f_ratio23->Eval(650)<<std::endl;
+  f_ratio23->SetParameters (fill_param8) ;
+  std::cout<<f_ratio23->Eval(650)<<std::endl;
+  f_ratio23->SetParameters (fill_param9) ;
+  std::cout<<f_ratio23->Eval(650)<<std::endl;
+  f_ratio23->SetParameters (fill_param10) ;
+  std::cout<<f_ratio23->Eval(650)<<std::endl;
+  f_ratio23->SetParameters (fill_param11) ;
+  std::cout<<f_ratio23->Eval(650)<<std::endl;
+  f_ratio23->SetParameters (fill_param12) ;
+  std::cout<<f_ratio23->Eval(650)<<std::endl;
+
+  f_ratio23->SetParameters (fill_param13) ;
+  std::cout<<f_ratio23->Eval(800)<<std::endl;
+  f_ratio23->SetParameters (fill_param14) ;
+  std::cout<<f_ratio23->Eval(800)<<std::endl;
+  f_ratio23->SetParameters (fill_param15) ;
+  std::cout<<f_ratio23->Eval(800)<<std::endl;
+  f_ratio23->SetParameters (fill_param16) ;
+  std::cout<<f_ratio23->Eval(800)<<std::endl;
+  f_ratio23->SetParameters (fill_param17) ;
+  std::cout<<f_ratio23->Eval(800)<<std::endl;
+  f_ratio23->SetParameters (fill_param18) ;
+  std::cout<<f_ratio23->Eval(800)<<std::endl;
+
+  f_ratio23->SetParameters (fill_param19) ;
+  std::cout<<f_ratio23->Eval(1000)<<std::endl;
+  f_ratio23->SetParameters (fill_param20) ;
+  std::cout<<f_ratio23->Eval(1000)<<std::endl;
+  f_ratio23->SetParameters (fill_param21) ;
+  std::cout<<f_ratio23->Eval(1000)<<std::endl;
+  f_ratio23->SetParameters (fill_param22) ;
+  std::cout<<f_ratio23->Eval(1000)<<std::endl;
+  f_ratio23->SetParameters (fill_param23) ;
+  std::cout<<f_ratio23->Eval(1000)<<std::endl;
+  f_ratio23->SetParameters (fill_param24) ;
+  std::cout<<f_ratio23->Eval(1000)<<std::endl;
+  
+    */
 
 return(0);
 
