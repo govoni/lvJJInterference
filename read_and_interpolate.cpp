@@ -47,7 +47,7 @@ double ratio_crystalBallLowHighWithRise (double* x, double* par)
 int main(int argc, char *argv[])
 {
 
-  TString parameters_normal [9] = {"Norm","Mean_CB","Sigma_CB","alphaR_CB","nR_CB","alphaL_CB","nL_CB","R","Tau"};
+  TString parameters_normal [9] = {"Log_Norm","Mean_CB","Sigma_CB","alphaR_CB","nR_CB","alphaL_CB","nL_CB","R","Tau"};
 
   double mass_chosen[5] = {600,700,800,900,1000};
   double c_chosen[6] = {0.1,0.3,0.5,0.7,0.9,1.0};
