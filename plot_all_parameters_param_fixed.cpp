@@ -1315,6 +1315,9 @@ int main(int argc, char *argv[])
   double cprime [6] = {0.1,0.3,0.5,0.7,0.9,1.0};
   double errcprime [6] = {0.,0.,0.,0.,0.,0.};
     double cprime_alt [2] = {0.01,1.05};
+    double corr_unc [6] = {1.,1.,1.,1.,1.,1.};
+    //    double corr_unc [6] = {0.903597935, 0.909363696, 0.911436824, 0.915032605, 0.915235601, 0.90766243}; //to see the effect of the scale up
+    //    double corr_unc [6] = {1.122070868, 1.113851691, 1.110910824, 1.105563464, 1.104919807, 1.115620499}; //to see the effect of the scale dn
   //   double cprime_alt [15] = {0.05,0.15,0.2,0.25,0.35,0.4,0.45,0.55,0.6,0.65,0.75,0.8,0.85,0.95,1.05};
 
 
@@ -1343,9 +1346,9 @@ int main(int argc, char *argv[])
   call_fit(1000, "1000", param1000, paramerror1000, param1000_mg, paramerror1000_mg);
 
 
-  TString parameters [9] = {"Log_Norm","Mean_CB_over_Higgs_mass","Sigma_CB_over_Higgs_width","alphaR_CB_times_Sigma_CB","nR_CB","alphaL_CB_times_Sigma_CB","nL_CB","R","Tau"};
+  TString parameters [9] = {"Norm","Mean_CB_over_Higgs_mass","Sigma_CB_over_Higgs_width","alphaR_CB_times_Sigma_CB","nR_CB","alphaL_CB_times_Sigma_CB","nL_CB","R","Tau"};
     // TString parameters [9] = {"Norm","Mean_CB_over_Higgs_mass","Sigma_CB_over_Higgs_width","alphaR_CB_times_Sigma_CB","nR_CB","alphaL_CB_times_Sigma_CB","nL_CB","R","Tau"};
-  TString parameters_normal [9] = {"Log_Norm","Mean_CB","Sigma_CB","alphaR_CB","nR_CB","alphaL_CB","nL_CB","R","Tau"};
+  TString parameters_normal [9] = {"Norm","Mean_CB","Sigma_CB","alphaR_CB","nR_CB","alphaL_CB","nL_CB","R","Tau"};
   double min[9] = {-16,0.8,0,0,0,0,0,0,0};
   double max[9] = {-6,1.2,0.6,300,12,300,8,100,100};
 
@@ -1568,19 +1571,19 @@ int main(int argc, char *argv[])
         int c2=0;
 	if (c==0)  c2=0;
 	else if (c==1)  c2=5;
-	filebis[i]<<349<<" "<<cprime_alt[c]<<" "<<TMath::Log(param350.at(c2).at(i))<<endl;
-	filebis[i]<<650<<" "<<cprime_alt[c]<<" "<<TMath::Log(param650.at(c2).at(i))<<endl;
-	filebis[i]<<800<<" "<<cprime_alt[c]<<" "<<TMath::Log(param800.at(c2).at(i))<<endl;
-	filebis[i]<<1001<<" "<<cprime_alt[c]<<" "<<TMath::Log(param1000.at(c2).at(i))<<endl;
+	filebis[i]<<349<<" "<<cprime_alt[c]<<" "<<TMath::Log(param350.at(c2).at(i)*corr_unc[c2])<<endl;
+	filebis[i]<<650<<" "<<cprime_alt[c]<<" "<<TMath::Log(param650.at(c2).at(i)*corr_unc[c2])<<endl;
+	filebis[i]<<800<<" "<<cprime_alt[c]<<" "<<TMath::Log(param800.at(c2).at(i)*corr_unc[c2])<<endl;
+	filebis[i]<<1001<<" "<<cprime_alt[c]<<" "<<TMath::Log(param1000.at(c2).at(i)*corr_unc[c2])<<endl;
       }
          }
     
     for (int c=0; c<Ncprime; c++) {
             if (parameters_normal[i].Contains("Norm")) {
-	  filebis[i]<<350<<" "<<cprime[c]<<" "<<TMath::Log(param350.at(c).at(i))<<endl;
-	  filebis[i]<<650<<" "<<cprime[c]<<" "<<TMath::Log(param650.at(c).at(i))<<endl;
-	  filebis[i]<<800<<" "<<cprime[c]<<" "<<TMath::Log(param800.at(c).at(i))<<endl;
-	  filebis[i]<<1000<<" "<<cprime[c]<<" "<<TMath::Log(param1000.at(c).at(i))<<endl;
+	  filebis[i]<<350<<" "<<cprime[c]<<" "<<TMath::Log(param350.at(c).at(i)*corr_unc[c])<<endl;
+	  filebis[i]<<650<<" "<<cprime[c]<<" "<<TMath::Log(param650.at(c).at(i)*corr_unc[c])<<endl;
+	  filebis[i]<<800<<" "<<cprime[c]<<" "<<TMath::Log(param800.at(c).at(i)*corr_unc[c])<<endl;
+	  filebis[i]<<1000<<" "<<cprime[c]<<" "<<TMath::Log(param1000.at(c).at(i)*corr_unc[c])<<endl;
 	}
       else {
       	filebis[i]<<350<<" "<<cprime[c]<<" "<<param350.at(c).at(i)<<endl;
