@@ -510,7 +510,7 @@ TF1 * FIT_madgraph_signal (TH1F * h_MWW_mg, double mass, double rangeScale, TStr
     // func_mg_1->SetParLimits(4,6.5,6.9);
     func_mg_1->FixParameter(5,1.19);
     // func_mg_1->SetParLimits(5,1.15,1.24);
-    func_mg_1->FixParameter(6,147);
+    func_mg_1->FixParameter(6,100);
     // func_mg_1->SetParLimits(6,140,150);
   }
 
@@ -1028,7 +1028,7 @@ int macro_findInterferece (string filename, double mass, std::vector<double> & p
   //  TH1F * c5_frame = (TH1F *) c5->DrawFrame (200, 0.1, rangeScale*mass, 10) ;
   TH1F * c5_frame = (TH1F *) c5->DrawFrame (200, 0.001, rangeScale*mass, ymax) ;
   c5_frame->SetTitle (0) ;
-  c5_frame->SetStats (1) ;
+  //  c5_frame->SetStats (0) ;
   c5_frame->GetXaxis ()->SetTitle ("m_{WW} (GeV)") ;
 
   //  func_mg_2->FixParameter(2,func_mg_2->GetParameter(2)*cprime);
@@ -1073,7 +1073,7 @@ int macro_findInterferece (string filename, double mass, std::vector<double> & p
 
   TH1F * c6_frame = (TH1F *) c6->DrawFrame (200, 0, rangeScale*mass, 10) ;
   c6_frame->SetTitle (0) ;
-  c6_frame->SetStats (1011) ;
+  c6_frame->SetStats (0) ;
   c6_frame->GetXaxis ()->SetTitle ("m_{WW} (GeV)") ;
   ratio->Draw ("EPsame") ;
   f_ratio->Draw ("same") ;
@@ -1315,9 +1315,9 @@ int main(int argc, char *argv[])
   double cprime [6] = {0.1,0.3,0.5,0.7,0.9,1.0};
   double errcprime [6] = {0.,0.,0.,0.,0.,0.};
     double cprime_alt [2] = {0.01,1.05};
-    double corr_unc [6] = {1.,1.,1.,1.,1.,1.};
+    //    double corr_unc [6] = {1.,1.,1.,1.,1.,1.};
     //    double corr_unc [6] = {0.903597935, 0.909363696, 0.911436824, 0.915032605, 0.915235601, 0.90766243}; //to see the effect of the scale up
-    //    double corr_unc [6] = {1.122070868, 1.113851691, 1.110910824, 1.105563464, 1.104919807, 1.115620499}; //to see the effect of the scale dn
+        double corr_unc [6] = {1.122070868, 1.113851691, 1.110910824, 1.105563464, 1.104919807, 1.115620499}; //to see the effect of the scale dn
   //   double cprime_alt [15] = {0.05,0.15,0.2,0.25,0.35,0.4,0.45,0.55,0.6,0.65,0.75,0.8,0.85,0.95,1.05};
 
 
