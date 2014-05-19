@@ -37,6 +37,7 @@ using namespace std;
 double ratio_crystalBallLowHighWithRise (double* x, double* par)
 {
   double den = crystalBallLowHigh (x, par + 9) ; // signal only
+  cout<<"den: "<<den<<endl;
   if (den == 0) return -1. ;
   double num = doubleGausCrystalBallLowHighPlusExp (x, par) ;    // signal and interference
     return num / den ;
@@ -50,10 +51,10 @@ int main(int argc, char *argv[])
 
   TString parameters_normal [9] = {"Norm","Mean_CB","Sigma_CB","alphaR_CB","nR_CB","alphaL_CB","nL_CB","R","Tau"};
 
-    double mass_chosen[5] = {600,700,800,900,1000};
+      double mass_chosen[5] = {600,700,800,900,1000};
     double c_chosen[6] = {0.1,0.3,0.5,0.7,0.9,1.0};
-    //double mass_chosen[1] = {648.608337402};
-    //double c_chosen[1] = {1.0};
+  //   double mass_chosen[1] = {800};
+  //  double c_chosen[1] = {1.0};
 
   int Npar=9;
 
@@ -114,6 +115,12 @@ int main(int argc, char *argv[])
 	//	cout<<m<<" "<<c<<" "<<i+9<<endl;
 	if (parameters_normal[i].Contains("Norm"))
 	    fill_param[i+9]=exp(igraph_S[i]->Interpolate(mass_chosen[m],c_chosen[c]));
+	else if (parameters_normal[i].Contains("nL"))
+	  if (igraph_S[i]->Interpolate(mass_chosen[m],c_chosen[c])>100)
+	    fill_param[i+9]=100;
+	  else
+	    fill_param[i+9]=igraph_S[i]->Interpolate(mass_chosen[m],c_chosen[c]);
+
 	else
 	    fill_param[i+9]=igraph_S[i]->Interpolate(mass_chosen[m],c_chosen[c]);
       }
@@ -125,10 +132,10 @@ int main(int argc, char *argv[])
       TF1* f_ratio23 = new TF1 ("f_ratio23", ratio_crystalBallLowHighWithRise, 0, 2000, 16) ;
       f_ratio23->SetParameters (fill_param) ;
 
-      //    std::cout<<mass_chosen[m]<<" "<<c_chosen[c]<<" a 1000: "<<f_ratio23->Eval(mass_chosen[m])<<std::endl;
+      //std::cout<<mass_chosen[m]<<" "<<c_chosen[c]<<" a 1000: "<<f_ratio23->Eval(588.131164551)<<std::endl;
 
 
-      grid<<mass_chosen[m]<<" "<<c_chosen[c]<<" "<<f_ratio23->Eval(mass_chosen[m])<<"\n";
+	        grid<<mass_chosen[m]<<" "<<c_chosen[c]<<" "<<f_ratio23->Eval(mass_chosen[m])<<"\n";
     }
   }
 
