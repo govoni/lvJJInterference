@@ -40,7 +40,7 @@ struct histos
   histos (TString name, double XS) : m_name (name), m_XS (XS)
     {
       m_h_MWW = new TH1F (TString ("h_MWW_") + name, 
-                          TString ("h_MWW_") + name, 800., 200., 1000.) ;
+                          TString ("h_MWW_") + name, 800., 200., 1800.) ;
       m_h_MWW->Sumw2 () ;
       m_h_scale = new TH1F (TString ("h_scale_") + name, 
                           TString ("h_scale_") + name, 100, 0., 1000.) ;
@@ -204,7 +204,7 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
   }
 
 
-
+  if (numb>0 || numt>0)   continue;
       //PG apply all the production cuts from phantom and madgraph to the sample
       //PG ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
       
@@ -254,6 +254,10 @@ fillHistos (LHEF::Reader & reader, histos & Histos, double XS, double referenceS
       
 //      pair<int, int> Wpair (2, 3) ;
       pair<int, int> Wpair = findPairWithWMass (v_f_quarks) ;      
+
+      lorentzVector W = v_f_quarks.at(Wpair.first) + v_f_quarks.at(Wpair.second);
+      //      cout<<W.M()<<endl;
+                  if (fabs(W.M()-80.385)>3)   continue;
 
       if (Wpair.first > 3 || Wpair.second > 3)
         {
