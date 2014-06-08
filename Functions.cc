@@ -490,7 +490,7 @@ double crystalBallLowHigh (double* x, double* par)
   {
     double A = pow(n2/fabs(alpha2), n2) * exp(-0.5 * alpha2*alpha2);
     double B = n2/fabs(alpha2) - fabs(alpha2);
-    
+
     return par[0] * A * pow(B - (xx-mean)/sigma, -1.*n2);
   }
   
